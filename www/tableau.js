@@ -108,6 +108,7 @@
       desired = state; current?.bridge?.update(state);
     });
   }
+  if (window.jQuery) window.jQuery(document).on('shiny:connected',register);
   document.addEventListener('shiny:connected',register);
   document.addEventListener('click',event => {
     if(event.target.closest('#tableau-retry')) { const host=document.getElementById('tableau-host'); if(host) mount(host); }

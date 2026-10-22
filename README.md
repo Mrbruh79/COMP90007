@@ -30,9 +30,11 @@ The preparation step requires internet access and writes a local `data/smp_cache
 
 ## Tableau status
 
-This is the R + Shiny first release. The progress charts currently render in R. The Tableau workbook has not yet been authored or published, so this version alone does not satisfy the assignment's Tableau requirement.
+The companion `tableau/Biodiversity_2037_Progress.twbx` is packaged with its CSV and has been opened and tested in Tableau Desktop 2026.2. It contains four worksheets, the ProgressOverview dashboard, and working year/action parameters. Download it from the app or open it directly in Desktop.
 
-When a public workbook is ready, set `TABLEAU_VIEW_URL` to its HTTPS `https://public.tableau.com/views/Workbook/Dashboard` share URL before starting R. The progress page puts the published view first, with local charts and an accessible evidence table beneath it. Configure `config/app.json` or the environment variable. Verify the course page 8.5 requirements and test the resulting embed before final submission. No unrelated workbook is substituted.
+Publication and live integration are deferred at the user's request. The Shiny app runs its local R progress charts. The API v3 bridge is implemented and unit-tested, but no live Tableau URL is configured and end-to-end embedding is not verified. This standalone delivery does not yet demonstrate the course's embedded Tableau requirement.
+
+Later, publish ProgressOverview and set `tableau_view_url` in `config/app.json` (or `TABLEAU_VIEW_URL`) to the HTTPS Tableau Public /views/Workbook/ProgressOverview URL. Test anonymous loading and both directions of year/action changes before claiming integration complete.
 
 ## Data and interpretation
 
@@ -59,3 +61,7 @@ The reference-value tests use the snapshot retrieved on 21 October 2026. Upstrea
 ## Current development
 
 The atlas also supports rank, top-15% share and hectare map measures, optional place labels, zoom to the selected area and pinned-area outlines. See `docs/VALIDATION.md` for current evidence and remaining gates, and `tableau/README.md` for the workbook contract. Run `Rscript scripts/prepare_tableau.R` and `node tests/progress_bridge.cjs` alongside the R tests. Planning documents supplied by the team are preserved under `docs/planning`; their planned statuses are historical context.
+
+## Package for handoff
+
+Run `python3 scripts/package_submission.py` after preparing the data. The local ZIP includes the frozen spatial cache, workbook, code, source notes and dependency versions. It excludes credentials, Git metadata, raw downloads and temporary Tableau files. Open the extracted folder and run `shiny::runApp()`; installed R packages are still required.

@@ -1,13 +1,18 @@
-# Validation status — 22 October 2026
+# Validation — 22 October 2026
 
-The original main commit was cf841d537fcd6be4a71faeba617ecb6ac94a9c2a.
+## Verified
 
-Verified locally: R 4.6.1 launches the original app; all original 19 checks pass. The updated implementation passes 31 R checks, including map metric denominators, missing data, common scales, temporal grain, scope-matched targets, release identity, URL validation and heatmap text contrast. Node tests pass for queued selections, duplicate-state suppression, mismatched releases, missing parameters, network errors and disposed views.
+- 31 R checks pass: spatial joins, missing records, selection and three-pin limit, metric denominators/scales, temporal grain, targets, release identity, URL validation and heatmap contrast.
+- Node bridge checks pass: queued selections, duplicate suppression, mismatched release, missing parameters, network errors and disposed views. These use a mock workbook, not the hosted Tableau service.
+- Shiny was launched and inspected in a browser. Switching to top-15% share updates the fixed percentage legend; selecting the Unit 668 / Horses heatmap cell updates the action and explicitly displays no action record. Progress charts and all 52 accessible evidence rows render. Selecting 2018–19 gives the expected 327,382 / 823,735 / 69,726 annual priority hectares.
+- The spatial refresh retrieved 1,053 areas and 12,403 action records, with valid display geometry. Original geometry and request hashes remain locally under data/downloads.
+- All 52 historical figures were compared with the official progress PDF tables on printed pages 5, 7, 11, 15 and 19. Priority plus other reconciles to statewide for all 16 applicable groups.
+- The packaged Tableau workbook was opened in Desktop 2026.2 with its included CSV. All four charts rendered. Selecting 2018–19 changed target dots to 8.18%, 54.92%, 4.65%; trend views retained four years. Action parameter selection and restoration of defaults were exercised. The percentage axes include 0–100.
 
-The spatial refresh retrieved 1,053 areas and 12,403 action records. Raw geometry and request hashes are retained locally under data/downloads. All 52 activity rows have unique action/year/coverage keys; priority plus other reconciles to statewide totals. This arithmetic check alone does not independently verify transcription against the PDF.
+## Current delivery boundary
 
-Browser evidence from the original app confirmed heatmap selection updating both action and area, and rendering of progress charts. The updated browser flow still needs verification. The pre-existing docs/browser-results.json is historical evidence, not a result from this revision.
+The user deferred publication and live integration. No public workbook was published; config/app.json remains blank. The actual workbook and Shiny application are delivered separately, with a workbook download in the app. Anonymous embedding, API parameter events against a live workbook and browser network-failure recovery remain unverified. Do not claim the course's embedded Tableau requirement is complete.
 
-Outstanding: author and open the Tableau workbook, publish ProgressOverview, configure its view URL, test anonymous embedding and bidirectional parameters, test network failure in-browser, extract and run the final submission package, and conduct real peer usability sessions. No completed workbook or live integration is claimed.
+Tableau uses faceted trend lines, target values in the explanatory header/tooltips, and selected-year target-attainment dots. Compared with the original visualisation plan, annual reference lines and target-gap connectors are not drawn in Tableau; the R charts include annual reference lines. The phone layout is auto-generated and has not been accepted as mobile QA.
 
-The user supplied course page 8.5 references on 22 October: Tableau Public publication, Tableau actions, Embedding API v3 and its tutorial. The integration uses API v3 and a Shiny custom-message bridge. Statewide progress is deliberately independent of polygon selection.
+No real peer evaluation, report submission, video recording, or deployment is claimed. Historical docs/browser-results.json predates this work. Planning documents preserve supplied context and are not a current implementation checklist.

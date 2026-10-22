@@ -8,3 +8,6 @@ data/downloads/
 docs/design-concept.png
 docs/qa-*.png
 docs/push-payload.json
+
+*.twbr
+dist/

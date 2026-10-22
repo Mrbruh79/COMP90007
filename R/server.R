@@ -200,6 +200,10 @@ atlas_server <- function(d) function(input, output, session) {
       tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(lapply(c(x$action[i],x$financial_year[i],x$coverage[i],
         x$basis[i],number(x$area_ha[i]),if(is.na(x$target_ha[i])) 'Not applicable' else number(x$target_ha[i]),x$source_pdf_page[i]),tags$td)))))
   })
+  output$download_tableau <- downloadHandler(
+    filename=function() 'Biodiversity_2037_Progress.twbx',
+    content=function(file) file.copy('tableau/Biodiversity_2037_Progress.twbx',file),
+    contentType='application/octet-stream')
   output$tableau <- renderUI({
     config <- tableau_config()
     if(config$valid) div(id='tableau-host',`data-view-url`=config$url,
@@ -210,10 +214,10 @@ atlas_server <- function(d) function(input, output, session) {
       div(id='tableau-mount'),
       p(class='caption','Map selections never filter these statewide figures. The local evidence below remains available if Tableau is unavailable.'))
     else div(class='empty-state',role='status',
-      h3(if(config$configured) 'Check the Tableau view address' else 'Tableau has not been published yet'),
+      h3(if(config$configured) 'Check the Tableau view address' else 'Explore the Tableau workbook'),
       p(if(config$configured) 'Use the HTTPS Tableau Public /views/Workbook/ProgressOverview address in config/app.json.'
-        else 'The local charts below contain the same reported measures. The assignment also requires the published Tableau dashboard.'),
-      p(class='caption','Workbook and publishing instructions are in the tableau folder.'))
+        else 'The charts below work locally. Download the companion workbook to explore the same measures in Tableau Desktop.'),
+      downloadButton('download_tableau','Download Tableau workbook'))
   })
   observe({
     req(input$year,input$trend_action)
