@@ -1,0 +1,27 @@
+{
+  "viewport": [
+    1600,
+    1000
+  ],
+  "mobile": [
+    390,
+    844
+  ],
+  "checks": [
+    "Page identity",
+    "Two initial areas, sixteen actions",
+    "Heatmap updates area, action and rank",
+    "Extent toggle updates units",
+    "Clear and pin controls",
+    "Missing record explained",
+    "CSV export preserves missing records and provenance",
+    "Reset restores map action and focus",
+    "Year selection updates target values",
+    "Temporal action filter",
+    "Sources view opens",
+    "No Shiny output errors",
+    "No browser JavaScript exceptions",
+    "No whole-page mobile overflow"
+  ],
+  "errors": []
+}

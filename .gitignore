@@ -1,0 +1,10 @@
+.Rhistory
+.RData
+.Rproj.user/
+.Renviron
+data/smp_cache.rds
+data/downloads/
+*.log
+docs/design-concept.png
+docs/qa-*.png
+docs/push-payload.json
