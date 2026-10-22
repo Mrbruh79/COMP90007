@@ -32,7 +32,7 @@ The preparation step requires internet access and writes a local `data/smp_cache
 
 This is the R + Shiny first release. The progress charts currently render in R. The Tableau workbook has not yet been authored or published, so this version alone does not satisfy the assignment's Tableau requirement.
 
-When a public workbook is ready, set `TABLEAU_VIEW_URL` to its HTTPS `https://public.tableau.com/views/Workbook/Dashboard` share URL before starting R. The progress page includes the view below the R charts. Verify the course page 8.5 requirements and test the resulting embed before final submission. No unrelated workbook is substituted.
+When a public workbook is ready, set `TABLEAU_VIEW_URL` to its HTTPS `https://public.tableau.com/views/Workbook/Dashboard` share URL before starting R. The progress page puts the published view first, with local charts and an accessible evidence table beneath it. Configure `config/app.json` or the environment variable. Verify the course page 8.5 requirements and test the resulting embed before final submission. No unrelated workbook is substituted.
 
 ## Data and interpretation
 
@@ -55,3 +55,7 @@ The reference-value tests use the snapshot retrieved on 21 October 2026. Upstrea
 ## Structure
 
 `app.R` starts the app. `R/data.R` defines data access and calculations, `R/ui.R` defines the layout, and `R/server.R` coordinates interactions. `www/` contains the visual styles and browser event bridge. `scripts/prepare_data.R` acquires the public spatial source, and `tests/` checks data and server behaviour.
+
+## Current development
+
+The atlas also supports rank, top-15% share and hectare map measures, optional place labels, zoom to the selected area and pinned-area outlines. See `docs/VALIDATION.md` for current evidence and remaining gates, and `tableau/README.md` for the workbook contract. Run `Rscript scripts/prepare_tableau.R` and `node tests/progress_bridge.cjs` alongside the R tests. Planning documents supplied by the team are preserved under `docs/planning`; their planned statuses are historical context.

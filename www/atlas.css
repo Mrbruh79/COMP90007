@@ -6,3 +6,15 @@
 @media(max-width:520px){.workspace{display:block}.control-rail{border-right:0;border-bottom:1px solid var(--rule);padding:0 0 20px}.map-region{margin-top:20px}.masthead nav{gap:15px;flex-wrap:wrap}.nav-link{font-size:12px}h1{font-size:38px}.heading p{font-size:14px}.context-line{font-size:11px;gap:8px}.context-line span:before{margin-right:8px}footer{flex-direction:column}.map-region .leaflet{height:400px!important}.container-fluid{padding:16px}.progress-controls .form-group{min-width:100%;width:100%}}
 
 .rank-legend{width:145px;padding:9px 11px;background:rgba(247,246,241,.95);font-size:11px;color:var(--ink)}.rank-gradient{height:10px;margin-top:8px;background:linear-gradient(to right,#edf2df,#b8d398,#6fa577,#285f47)}.rank-ticks{display:flex;justify-content:space-between;font-size:10px}.rank-missing{display:flex;align-items:center;gap:6px;margin-top:8px}.rank-missing i{display:inline-block;background:#e1e3df;width:12px;height:12px}
+
+/* Shared atlas controls and the embedded progress workspace. */
+#map_caption{font-size:11px;max-width:70%}.rank-legend{width:180px}.rank-legend strong{font-weight:600}
+.control-rail .checkbox{font-size:12px;margin:0 0 16px}.control-rail #zoom_area{padding:6px;font-size:12px}
+#tableau-host{border-top:1px solid var(--rule);padding-top:15px}#tableau-status{padding:10px 12px;margin:0 0 12px;background:#e8eee2;font-size:13px}
+#tableau-host[data-state='error'] #tableau-status,#tableau-host[data-state='timeout'] #tableau-status{background:#f0e6d7;border-left:3px solid var(--ochre)}
+#tableau-retry{padding:6px 12px;margin:0 18px 12px 0}#tableau-host[data-state='ready'] #tableau-retry{display:none}
+#tableau-mount:empty{display:none}#progress-viz{display:block;width:100%;min-height:850px}
+#local-evidence{border-top:1px solid var(--rule);padding-top:20px;margin-top:25px}#local-evidence>summary{font-family:Georgia,serif;font-size:23px}
+.evidence-scroll{overflow:auto;max-height:480px}.evidence-scroll th{position:sticky;top:0;background:var(--paper)}
+#local-evidence details{margin-top:20px}.progress-grid .shiny-plot-output{max-width:100%}
+@media(max-width:850px){#map_caption{max-width:100%}}
