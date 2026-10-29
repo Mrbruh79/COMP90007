@@ -13,6 +13,7 @@ const port=Number(process.env.QA_PORT||7391),url=`http://127.0.0.1:${port}`;
   const page=await browser.newPage({viewport:{width:1600,height:1000},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);await page.waitForSelector('.heat-cell');
   check(await page.locator('.heat-cell').count()===32,'Retained 16-action explorer');
+  check(await page.locator('#map_metric,#extent_unit,.comparison-section,.extent-row').count()===0,'Priority threshold controls and bars removed');
   await page.locator('[data-page="landscape"]').click();await page.locator('#land_focus h2').waitFor();
   check((await page.locator('#land_focus').innerText()).includes('45.4%'),'Prepared reference value rendered');
   await page.locator('#land_area-selectized').click();await page.locator('#land_area-selectized').press('Backspace');await page.locator('#land_area-selectized').type('925');
@@ -24,7 +25,7 @@ const port=Number(process.env.QA_PORT||7391),url=`http://127.0.0.1:${port}`;
   for(const [id,value] of [['land_class','17'],['land_metric','change'],['start_epoch','2010_2015']]){
    await page.locator(`#${id}-selectized`).click();await page.locator(`.selectize-dropdown .option[data-value="${value}"]`).click();
   }
-  await page.waitForFunction(()=>document.querySelector('#land_map_caption')?.textContent.includes('2010-2015')&&document.querySelector('#land_map_caption')?.textContent.includes('pp scale'));
+  await page.waitForFunction(()=>document.querySelector('#land_map_caption')?.textContent.includes('2010-2015')&&document.querySelector('#land_map_caption')?.textContent.includes('percentage points'));
   check((await page.locator('#land_focus').innerText()).includes('Water'),'Class and epoch controls update evidence');
   await page.locator('#land_pin').click();await page.locator('#land_pinned [data-remove="unit925"]').waitFor();
   const download=page.waitForEvent('download');await page.locator('#download_landcover').click();const file=await(await download).path();const csv=fs.readFileSync(file,'utf8');

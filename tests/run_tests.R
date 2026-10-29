@@ -15,8 +15,10 @@ check(r$CE_RANK==88 && r$AREA_20==3855,'verified Unit 668 reference values')
 check(abs(r$share15-52.5993)<.0001,'opportunity share denominator')
 check(all(is.na(compare_rows(d,'unit925','Control Foxes')$CE_RANK)),'comparison retains missing area')
 shiny::testServer(atlas_server(d), {
-  session$setInputs(area='unit668',action='Control Foxes',extent_unit='pct',land_area='unit668',land_class='12',start_epoch='1985_1990',end_epoch='2015_2019',land_metric='share')
+  session$setInputs(area='unit668',action='Control Foxes',land_area='unit668',land_class='12',start_epoch='1985_1990',end_epoch='2015_2019',land_metric='share')
   check(focus()$CE_RANK==88,'server selection matches data')
+  detail<-paste(as.character(output$area_detail),collapse='');grid<-paste(as.character(output$heatmap),collapse='')
+  check(grepl('Selected action: Fox control',detail) && !grepl('Top 5%|Top 15%|Area extent in top ranks',paste(detail,grid)), 'priority detail and action grid contain rank and hectares without threshold categories')
   session$setInputs(area='unit925',pin=1)
   check(nrow(focus())==0 && 'unit925' %in% pins(),'missing unit can be selected and compared')
   session$setInputs(area='unit1',pin=2)
@@ -31,14 +33,12 @@ shiny::testServer(atlas_server(d), {
 
 
 # Additional behaviours introduced by the completed atlas and Tableau data contract.
-rank_map <- map_spec(d,'Control Foxes','rank')
-share_map <- map_spec(d,'Control Foxes','share15')
-hectare_map <- map_spec(d,'Control Foxes','hectares')
-check(rank_map$limit==100 && share_map$limit==100,'rank and share map scales remain fixed')
+rank_map <- map_spec(d,'Control Foxes')
+check(rank_map$limit==100 && map_spec(d,'Control Cats')$limit==100,'priority rank scale stays fixed across actions')
 idx <- match('unit668',d$areas$microID)
-check(abs(share_map$values[idx]-52.5993)<.0001 && hectare_map$values[idx]==3855,'map measure switch uses the correct denominator and hectares')
-check(is.na(share_map$values[match('unit925',d$areas$microID)]),'missing opportunity stays missing on every map measure')
-check(hectare_map$limit==max(d$actions$AREA_20[d$actions$Action=='Control Foxes']),'hectare legend covers the complete action extent')
+check(rank_map$values[idx]==88 && rank_map$colours[idx]==rank_colour(88),'priority map uses the supplied cost-effectiveness rank')
+check(is.na(rank_map$values[match('unit925',d$areas$microID)]),'missing action stays missing on the priority map')
+check(map_spec(d,'Control Cats')$values[idx]==97,'changing action updates the mapped rank')
 # Verify normal-size text contrast for every palette colour and the missing-data cell.
 lum <- function(col) {r<-grDevices::col2rgb(col)/255;l<-ifelse(r<=.04045,r/12.92,((r+.055)/1.055)^2.4);colSums(l*c(.2126,.7152,.0722))}
 background <- c(rank_palette,'#e1e3df');foreground<-cell_text_colour(background)
@@ -100,4 +100,5 @@ check(t$limit>=max(abs(t$values),na.rm=TRUE) && t$limit>=1,'change map uses a la
 source('R/landscape_ui.R');source('R/ui.R')
 html<-as.character(atlas_ui(d))
 check(grepl('Explore landscape change',html) && !grepl('Review progress|Reported management|Target ha',html),'new navigation and sources replace the PDF core')
+check(!grepl('map_metric|extent_unit|Compare opportunity extent|Top.?5%|Top.?15%',html),'priority threshold controls and bars are absent from the interface')
 cat('TOTAL',checks,'checks passed.\n')

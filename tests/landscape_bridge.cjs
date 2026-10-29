@@ -9,10 +9,10 @@ const params=()=>[...Object.entries(PARAMETERS).map(([k,name])=>({name,currentVa
  b.update({...base,focus:'unit1'});const connecting=b.connect('release1');
  while(!release)await new Promise(r=>setImmediate(r));
  b.update({...base,focus:'unit2',compare1:''});release();await connecting;
- assert.equal(b.applied['Focus area'],'unit2');assert(calls.some(([n,v])=>n==='Compare area 1'&&v===''));
+ assert.equal(b.applied['Main area'],'unit2');assert(calls.some(([n,v])=>n==='Additional area 1 (optional)'&&v===''));
  const n=calls.length;await b.update({...base,focus:'unit2',compare1:''});assert.equal(calls.length,n);
  b.close();await b.update({...base,focus:'unit3'});assert.equal(calls.length,n);
- for(const [name,data] of [['release mismatch',params().map(p=>p.name==='Data release'?{...p,currentValue:{value:'old'}}:p)],['missing control',params().filter(p=>p.name!=='Land-cover class')]]){
+ for(const [name,data] of [['release mismatch',params().map(p=>p.name==='Data release'?{...p,currentValue:{value:'old'}}:p)],['missing control',params().filter(p=>p.name!=='Cover type')]]){
   const x=new LandscapeBridge({getParametersAsync:async()=>data},()=>{});await assert.rejects(x.connect('release1'));console.log('PASS',name);
  }
  const x=new LandscapeBridge({getParametersAsync:async()=>params(),changeParameterValueAsync:async()=>{throw Error('network')}},s=>states.push(s));await x.connect('release1');await x.update({...base,focus:'unit9'});assert(states.includes('error'));

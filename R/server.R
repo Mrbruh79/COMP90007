@@ -29,20 +29,20 @@ atlas_server <- function(d) function(input, output, session) {
   })
   observeEvent(input$focus_area,{if(input$focus_area %in% d$areas$microID) updateSelectizeInput(session,'area',selected=input$focus_area)})
   output$priority_map <- leaflet::renderLeaflet({
-    s <- map_spec(d,'Control Foxes')
+    a <- isolate(chosen_action());s <- map_spec(d,a)
     leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12,zoomSnap=.25)) |>
       leaflet::fitBounds(140.9,-39.2,150.05,-33.95) |>
       leaflet::addProviderTiles('CartoDB.Positron',group='context',options=leaflet::providerTileOptions(opacity=.5)) |>
       leaflet::hideGroup('context') |>
       leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
-        color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,'/ Foxes /',s$formatted),
+        color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,action_labels[[a]],s$formatted,sep=' / '),
         highlightOptions=leaflet::highlightOptions(color='#203c32',weight=2,bringToFront=TRUE)) |>
       leaflet::addControl(map_legend(s),position='topright',className='rank-legend') |>
       leaflet::addScaleBar(position='bottomleft',options=leaflet::scaleBarOptions(imperial=FALSE)) |>
       leaflet::addControl('DEECA / SMP4',position='bottomright',className='source-control')
   })
-  observeEvent(list(input$action,input$map_metric),{
-    a <- chosen_action();s <- map_spec(d,a,input$map_metric %||% 'rank')
+  observeEvent(input$action,{
+    a <- chosen_action();s <- map_spec(d,a)
     leaflet::leafletProxy('priority_map',data=d$areas) |>
       leaflet::clearGroup('areas') |>
       leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
@@ -61,7 +61,7 @@ atlas_server <- function(d) function(input, output, session) {
       color='#a56a2b',weight=2,dashArray='4 3',options=leaflet::pathOptions(interactive=FALSE))
     proxy |> leaflet::addPolygons(data=d$areas[d$areas$microID==selected(),],group='selection',fill=FALSE,
       color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE))
-    chosen_action();input$map_metric
+    chosen_action()
   })
   observeEvent(input$map_context,{
     proxy <- leaflet::leafletProxy('priority_map')
@@ -71,38 +71,27 @@ atlas_server <- function(d) function(input, output, session) {
     b <- sf::st_bbox(d$areas[d$areas$microID==selected(),])
     leaflet::leafletProxy('priority_map') |> leaflet::fitBounds(b[['xmin']],b[['ymin']],b[['xmax']],b[['ymax']])
   })
-  output$map_caption <- renderText({
-    s <- map_spec(d,chosen_action(),input$map_metric %||% 'rank')
-    if(s$unit=='ha') 'Darker = more top-ranked hectares. Hectare scale is specific to the selected action.'
-    else if(s$unit=='%') 'Darker = a larger top-ranked share of relevant action area. Fixed 0–100% scale.'
-    else 'Darker = greater relative cost-effectiveness. Fixed 0–100 rank scale.'
-  })
+  output$priority_map_title <- renderText(paste('Area rankings for',tolower(action_labels[[chosen_action()]])))
+  output$map_caption <- renderText(paste('Darker green = a higher cost-effectiveness rank for',tolower(action_labels[[chosen_action()]]),'/ 0–100 scale.'))
   observeEvent(input$priority_map_shape_click,{
     id <- input$priority_map_shape_click$id
     if (!is.null(id) && id %in% d$areas$microID) updateSelectizeInput(session,'area',selected=id)
   })
   observeEvent(input$reset,{
     updateSelectInput(session,'action',selected='Control Foxes');updateSelectizeInput(session,'area',selected='unit668')
-    updateSelectInput(session,'map_metric',selected='rank')
     leaflet::leafletProxy('priority_map') |> leaflet::fitBounds(140.9,-39.2,150.05,-33.95)
     notice('Map and action reset. Your pinned areas are retained.')
   })
-  extent_bar <- function(label,value,total) {
-    pct <- 100*value/total
-    in_pct <- is.null(input$extent_unit)||input$extent_unit=='pct'
-    div(class='extent-row',div(class='extent-label',span(label),strong(if(in_pct) paste0(number(pct,1),'%') else paste(number(value),'ha'))),
-      div(class='bar-track',`aria-label`=paste(label,number(pct,1),'percent of relevant area'),
-        div(class='bar-fill',style=paste0('width:',pct,'%;'))),span(class='caption',paste0(number(pct,1),'% of relevant area')))
-  }
   output$area_detail <- renderUI({
     r <- focus()
     tagList(p(class='detail-label','Selected area'),h2(unit_name(selected())),
+      p(class='selected-action',paste('Selected action:',action_labels[[chosen_action()]])),
       if(!nrow(r)) div(class='empty-state',h3('No action record'),p('This snapshot has no record for this area and action. This does not establish that the threat is absent.')) else tagList(
-        p(class='detail-label','Median cost-effectiveness rank'),div(class='rank-value',r$CE_RANK,span('/ 100')),
-        p(class='detail-label','Relevant area'),div(class='area-value',number(r$AREA_TOT),span(' ha')),
-        tags$hr(),h3('Area extent in top ranks'),extent_bar('Top 5%',r$AREA_5,r$AREA_TOT),extent_bar('Top 15%',r$AREA_20,r$AREA_TOT),
-        p(class='caption','The top 5% is included within the top 15%.'),
-        tags$details(tags$summary('Evidence for this selection'),p(paste('Source rank range:',trimws(r$CE_RANGE))),
+        p(class='detail-label','Cost-effectiveness rank'),div(class='rank-value',r$CE_RANK,span('on a 0–100 scale')),
+        p(class='caption',paste('Higher ranks indicate stronger expected benefits relative to cost for',paste0(tolower(action_labels[[chosen_action()]]),'.'))),
+        p(class='detail-label','Relevant land for this action'),div(class='area-value',number(r$AREA_TOT),span(' ha')),
+        p(class='caption','Relevant hectares as reported by the source. One hectare is 10,000 square metres.'),
+        tags$details(tags$summary('Evidence for this selection'),p('The government supplies the median cost-effectiveness rank for this area and action. It is a relative ranking, not an area’s position in a numbered list or a percentage chance of success.'),p(paste('Source rank range:',trimws(r$CE_RANGE))),
           p('This is a source range, not a confidence interval.'),p(paste('Snapshot:',d$retrieved)),
           tags$a(href=paste0('https://bio-prd-naturekit-public-data.s3-ap-southeast-2.amazonaws.com/smp-reports/summary_areas_v4/SMPreport_Summary_',selected(),'.html'),target='_blank',rel='noopener','Open official area report'),p('Report values may differ from this service snapshot.'))))
   })
@@ -113,30 +102,12 @@ atlas_server <- function(d) function(input, output, session) {
       tags$thead(tags$tr(tags$th(scope='col','Area'),lapply(acts,function(a) tags$th(scope='col',class=if(a==chosen_action()) 'active-action' else '',action_labels[[a]])))),
       tags$tbody(lapply(ids,function(id) tags$tr(tags$th(scope='row',unit_name(id)),lapply(acts,function(a) {
         r <- action_row(d,id,a);v <- if(nrow(r)) r$CE_RANK else NA_real_
-        label <- paste(unit_name(id),a,if(is.na(v)) 'No action record' else paste('rank',v,';',number(r$AREA_TOT),'relevant ha;',number(r$share15,1),'percent in top 15%'),sep='; ')
+        label <- paste(unit_name(id),a,if(is.na(v)) 'No action record' else paste('rank',v,';',number(r$AREA_TOT),'relevant ha'),sep='; ')
         tags$td(class=if(a==chosen_action()) 'active-action' else '',
           tags$button(type='button',class=paste('heat-cell',if(is.na(v)) 'missing' else ''),`data-area`=id,`data-action`=a,
             style=paste0('background:',rank_colour(v),';color:',cell_text_colour(rank_colour(v))),
             `aria-label`=label,title=label,if(is.na(v)) 'No record' else as.character(v)))
       }))))))
-  })
-  output$comparison <- renderUI({
-    ids <- pins()
-    if(!length(ids)) return(div(class='empty-state','Pin areas from the map or heatmap to compare their opportunity extent.'))
-    rows <- compare_rows(d,ids,chosen_action());pct <- is.null(input$extent_unit)||input$extent_unit=='pct'
-    limit <- if(pct) 100 else max(c(rows$AREA_TOT,1),na.rm=TRUE)
-    div(class='comparison-grid',lapply(ids,function(id) {
-      r <- rows[rows$microID==id,]
-      div(class='comparison-column',h3(unit_name(id)),
-        if(!nrow(r)||is.na(r$CE_RANK)) p('No action record') else tagList(
-          p(paste(action_labels[[chosen_action()]],' /  Rank',r$CE_RANK,' / ',number(r$AREA_TOT),'relevant ha')),
-          lapply(c('Top 5%'='AREA_5','Top 15%'='AREA_20'),function(field) {
-            value <- if(pct) 100*r[[field]]/r$AREA_TOT else r[[field]]
-            div(class='extent-row',div(class='extent-label',span(if(field=='AREA_5') 'Top 5%' else 'Top 15%'),
-              strong(if(pct) paste0(number(value,1),'%') else paste(number(value),'ha'))),
-              div(class='bar-track',div(class='bar-fill',style=paste0('width:',100*value/limit,'%;'))))
-          })))
-    }))
   })
   output$download_compare <- downloadHandler(filename=function() paste0('conservation-comparison-',Sys.Date(),'.csv'),content=function(file) {
     ids <- unique(c(pins(),selected()))

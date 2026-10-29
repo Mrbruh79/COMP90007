@@ -17,19 +17,21 @@ S='federated.landcover'; C='textscan.landcover'; OBJ='landcover.csv_2020'
 fields={k:('integer' if k in ['epoch_start','epoch_end','class_code'] else 'real' if k in ['area_ha','share_pct','valid_area_ha','coverage_pct','unclassified_area_ha','nodata_area_ha'] else 'string') for k in next(csv.reader((T/'data/landcover.csv').open()))}
 params={
  'DataRelease':('Data release',manifest['release'],None),
- 'FocusArea':('Focus area','unit668',units),
- 'Compare1':('Compare area 1','unit375',['']+units),
- 'Compare2':('Compare area 2','',['']+units),
- 'Compare3':('Compare area 3','',['']+units),
- 'LandClass':('Land-cover class','Treed native vegetation',[r['class_label'] for r in classes]),
- 'StartEpoch':('Start epoch',epochs[0]['epoch_label'],[r['epoch_label'] for r in epochs[:-1]]),
- 'EndEpoch':('End epoch',epochs[-1]['epoch_label'],[r['epoch_label'] for r in epochs[1:]])}
+ 'FocusArea':('Main area','unit668',units),
+ 'FocusView':('Chart 1: what should the bars show?','All cover types',['All cover types','Selected cover type']),
+ 'Compare1':('Additional area 1 (optional)','unit375',['']+units),
+ 'Compare2':('Additional area 2 (optional)','',['']+units),
+ 'Compare3':('Additional area 3 (optional)','',['']+units),
+ 'LandClass':('Cover type','Treed native vegetation',[r['class_label'] for r in classes]),
+ 'StartEpoch':('Earlier period',epochs[0]['epoch_label'],[r['epoch_label'] for r in epochs[:-1]]),
+ 'EndEpoch':('Later period',epochs[-1]['epoch_label'],[r['epoch_label'] for r in epochs[1:]])}
 calcs={
  'FocusMatch':('boolean','[microID] = [Parameters].[FocusArea]'),
+ 'FocusViewMatch':('boolean','[Parameters].[FocusView] = "All cover types" OR [class_label] = [Parameters].[LandClass]'),
  'CompareMatch':('boolean','[microID] = [Parameters].[FocusArea] OR [microID] = [Parameters].[Compare1] OR [microID] = [Parameters].[Compare2] OR [microID] = [Parameters].[Compare3]'),
  'ClassMatch':('boolean','[class_label] = [Parameters].[LandClass]'),
  'EndpointMatch':('boolean','INT(LEFT([Parameters].[StartEpoch],4)) < INT(LEFT([Parameters].[EndEpoch],4)) AND ([epoch_label] = [Parameters].[StartEpoch] OR [epoch_label] = [Parameters].[EndEpoch])'),
- 'IntervalRole':('string','IF [epoch_label] = [Parameters].[StartEpoch] THEN "Start epoch" ELSEIF [epoch_label] = [Parameters].[EndEpoch] THEN "End epoch" ELSE "Intermediate epoch" END')}
+ 'IntervalRole':('string','IF [epoch_label] = [Parameters].[StartEpoch] THEN "Earlier period" ELSEIF [epoch_label] = [Parameters].[EndEpoch] THEN "Later period" ELSE "Other period" END')}
 def sub(parent,tag,text=None,**attrs):
  e=E.SubElement(parent,tag,attrs)
  if text is not None:e.text=text
@@ -45,7 +47,7 @@ def parameter(key, members=True):
  return c
 def column(key):
  dtype=fields.get(key,calcs.get(key,('string',))[0]);numeric=dtype in ['real','integer']
- e=E.Element('column',{'caption':{'share_pct':'Share of classified area (%)','unit_label':'Summary area','epoch_label':'Historical epoch','area_ha':'Projected grid hectares','coverage_pct':'Classified coverage (%)'}.get(key,key.replace('_',' ').capitalize()),'datatype':dtype,'name':f'[{key}]','role':'measure' if numeric else 'dimension','type':'quantitative' if numeric else 'nominal'})
+ e=E.Element('column',{'caption':{'share_pct':'Land covered (%)','unit_label':'Area','epoch_label':'Historical period','class_label':'Cover type','microID':'Area ID','IntervalRole':'Period being compared','area_ha':'Land covered (hectares)','coverage_pct':'Area with classified data (%)','unclassified_area_ha':'Unclassified land (hectares)','nodata_area_ha':'Missing data (hectares)'}.get(key,key.replace('_',' ').capitalize()),'datatype':dtype,'name':f'[{key}]','role':'measure' if numeric else 'dimension','type':'quantitative' if numeric else 'nominal'})
  if key in calcs:sub(e,'calculation',**{'class':'tableau','formula':calcs[key][1]})
  return e
 def inst(key):return f'[{"sum" if fields.get(key) in ["real","integer"] else "none"}:{key}:{"qk" if fields.get(key) in ["real","integer"] else "nk"}]'
@@ -82,8 +84,8 @@ pdep=sub(ds,'datasource-dependencies',datasource='Parameters')
 for k in params:pdep.append(parameter(k,False))
 og=sub(ds,'object-graph');obj=sub(sub(og,'objects'),'object',caption='landcover.csv',id=OBJ);sub(obj,'properties',context='').append(deepcopy(relation))
 worksheets=sub(root,'worksheets')
-def sheet(name,title,filters,mark,rows,cols,colour,lod=()):
- w=sub(worksheets,'worksheet',name=name);fmt=sub(sub(sub(w,'layout-options'),'title'),'formatted-text');sub(fmt,'run',title,bold='true',fontsize='12')
+def sheet(name,title,filters,mark,rows,cols,colour,lod=(),fixed_axis=True):
+ w=sub(worksheets,'worksheet',name=name);fmt=sub(sub(sub(w,'layout-options'),'title'),'formatted-text');sub(fmt,'run',title,bold='true',fontsize='14',fontcolor='#193f36')
  table=sub(w,'table');view=sub(table,'view');sources=sub(view,'datasources');sub(sources,'datasource',caption='Victoria land cover by SMP summary area',name=S);sub(sources,'datasource',name='Parameters')
  dep=sub(view,'datasource-dependencies',datasource='Parameters')
  for k in params:dep.append(parameter(k,False))
@@ -95,7 +97,10 @@ def sheet(name,title,filters,mark,rows,cols,colour,lod=()):
  slices=sub(view,'slices')
  for k in filters:sub(slices,'column',ref(k))
  sub(view,'aggregation',value='true')
- style=sub(table,'style');axis=sub(style,'style-rule',element='axis');sub(axis,'encoding',attr='space',**{'class':'0','field':ref('share_pct'),'field-type':'quantitative','max':'100.0','min':'0.0','range-type':'fixed','scope':'rows' if rows==ref('share_pct') else 'cols','type':'space'})
+ style=sub(table,'style')
+ if fixed_axis:
+  axis=sub(style,'style-rule',element='axis');sub(axis,'encoding',attr='space',**{'class':'0','field':ref('share_pct'),'field-type':'quantitative','max':'100.0','min':'0.0','range-type':'fixed','scope':'rows' if rows==ref('share_pct') else 'cols','type':'space'})
+ # A bar view's automatic axis includes zero and fits the displayed class values.
  if colour=='class_label':
   rule=sub(style,'style-rule',element='mark');ce=sub(rule,'encoding',attr='color',field=ref('class_label'),type='palette')
   for row,col in zip(classes,colours):sub(sub(ce,'map',to=col),'bucket',json.dumps(row['class_label']))
@@ -103,20 +108,65 @@ def sheet(name,title,filters,mark,rows,cols,colour,lod=()):
  for k in lod:sub(enc,'lod',column=ref(k))
  for k in ['area_ha','coverage_pct','unclassified_area_ha','nodata_area_ha']:sub(enc,'tooltip',column=ref(k))
  sub(table,'rows',rows);sub(table,'cols',cols);sid(w);return w
-sheet('T01_Composition','Focused area | composition across seven historical epochs (%)',['FocusMatch'],'Bar',ref('share_pct'),ref('epoch_label'),'class_label',['class_label','microID'])
-sheet('T02_ClassTrajectories','Selected class | share by focused and comparison area (%)',['CompareMatch','ClassMatch'],'Line',ref('share_pct'),ref('epoch_label'),'unit_label',['microID','class_label'])
-sheet('T03_EndpointComparison','Selected class | start and end epochs (%)',['CompareMatch','ClassMatch','EndpointMatch'],'Circle',ref('unit_label'),ref('share_pct'),'IntervalRole',['epoch_label','microID','class_label'])
-dash=sub(sub(root,'dashboards'),'dashboard',**{'enable-sort-zone-taborder':'true','name':'LandscapeChange'});sub(dash,'style');sub(dash,'size',maxheight='1200',maxwidth='1200',minheight='1200',minwidth='1200');sub(sub(dash,'datasources'),'datasource',name='Parameters');dep=sub(dash,'datasource-dependencies',datasource='Parameters')
+sheet('T01_Composition','1. What covers the main area?',['FocusMatch','FocusViewMatch'],'Bar',ref('share_pct'),ref('epoch_label'),'class_label',['class_label','microID'],fixed_axis=False)
+sheet('T02_ClassTrajectories','2. How did the chosen cover type change over time?',['CompareMatch','ClassMatch'],'Line',ref('share_pct'),ref('epoch_label'),'unit_label',['microID','class_label'])
+sheet('T03_EndpointComparison','3. Did the chosen cover type increase or decrease?',['CompareMatch','ClassMatch','EndpointMatch'],'Circle',ref('unit_label'),ref('share_pct'),'IntervalRole',['epoch_label','microID','class_label'])
+# Pixel-based dashboard grid: controls at left, three reading tasks at right.
+WIDTH,HEIGHT=1400,1660
+dash=sub(sub(root,'dashboards'),'dashboard',**{'enable-sort-zone-taborder':'true','name':'LandscapeChange'})
+sub(dash,'style');sub(dash,'size',maxheight=str(HEIGHT),maxwidth=str(WIDTH),minheight=str(HEIGHT),minwidth=str(WIDTH))
+sub(sub(dash,'datasources'),'datasource',name='Parameters');dep=sub(dash,'datasource-dependencies',datasource='Parameters')
 for k in params:dep.append(parameter(k))
 z=sub(sub(dash,'zones'),'zone',h='100000',id='1',**{'type-v2':'layout-basic','w':'100000','x':'0','y':'0'})
-header=sub(z,'zone',h='9000',id='2',**{'type-v2':'text','w':'98000','x':'1000','y':'700'});fmt=sub(header,'formatted-text');sub(fmt,'run','Victoria | conservation priorities and historical land cover\n',bold='true',fontsize='16');sub(fmt,'run','Source: State of Victoria / DEECA, Victorian Land Cover Time Series (2020), CC BY 4.0. Seven multi-year epochs; first file labels 1985-1990. Shares use classified area only. Units overlap and must not be summed. Land cover is not habitat condition or evidence of management outcomes.',fontsize='10')
-for i,k in enumerate(['FocusArea','LandClass','StartEpoch','EndEpoch']):sub(z,'zone',h='6000',id=str(10+i),**{'type-v2':'paramctrl','param':f'[Parameters].[{k}]','w':'24000','x':str(1000+24500*i),'y':'10000'})
-for i,k in enumerate(['Compare1','Compare2','Compare3']):sub(z,'zone',h='5000',id=str(14+i),**{'type-v2':'paramctrl','param':f'[Parameters].[{k}]','w':'32000','x':str(1000+33000*i),'y':'16000'})
-for i,(name,x,y,w,h) in enumerate([('T01_Composition',1000,23000,69000,38000),('T02_ClassTrajectories',1000,63000,59000,30000),('T03_EndpointComparison',61000,63000,38000,30000)]):
- zone=sub(z,'zone',h=str(h),id=str(20+i),name=name,w=str(w),x=str(x),y=str(y));zs=sub(zone,'zone-style');sub(zs,'format',attr='border-style',value='none');sub(zs,'format',attr='margin',value='4')
-sub(z,'zone',h='38000',id='40',name='T01_Composition',w='28000',x='71000',y='23000',**{'type-v2':'color','param':ref('class_label')})
-sub(z,'zone',h='3500',id='41',name='T02_ClassTrajectories',w='59000',x='1000',y='95000',**{'type-v2':'color','param':ref('unit_label')})
-sub(z,'zone',h='3500',id='42',name='T03_EndpointComparison',w='38000',x='61000',y='95000',**{'type-v2':'color','param':ref('IntervalRole')})
+def zone(id,x,y,w,h,kind=None,**attrs):
+ if kind:attrs['type-v2']=kind
+ return sub(z,'zone',id=str(id),x=str(round(x/WIDTH*100000)),y=str(round(y/HEIGHT*100000)),w=str(round(w/WIDTH*100000)),h=str(round(h/HEIGHT*100000)),**attrs)
+def paint(n,bg='#ffffff',margin=8):
+ st=sub(n,'zone-style')
+ for k,v in [('background-color',bg),('border-style','none'),('border-width','0'),('margin',str(margin))]:sub(st,'format',attr=k,value=v)
+ return n
+def textzone(id,x,y,w,h,title='',body='',bg='#ffffff',ink='#193f36',size=16):
+ n=zone(id,x,y,w,h,'text');fmt=sub(n,'formatted-text')
+ if title:sub(fmt,'run',title+('\n' if body else ''),bold='true',fontsize=str(size),fontcolor=ink)
+ if body:sub(fmt,'run',body,fontsize='11',fontcolor=('#e2eee8' if bg=='#193f36' else '#495d56'))
+ return paint(n,bg,12)
+# Background panels are placed first so all controls and charts remain foreground.
+textzone(90,0,0,1400,1660,bg='#eef2ef')
+textzone(91,24,154,278,1020,bg='#e2ebe5')
+textzone(92,322,154,1054,600)
+textzone(93,322,774,1054,400)
+textzone(94,322,1194,1054,310)
+textzone(95,24,1194,278,310,bg='#e2ebe5')
+textzone(2,0,0,1400,130,'VICTORIA  /  LANDSCAPE CHANGE',
+ 'See what covers an area, follow its history, and compare it with other areas.\nSeven mapped periods  |  1985–1990 to 2015–2019  |  19 cover types',bg='#193f36',ink='#ffffff',size=25)
+textzone(3,40,170,246,76,'Choose your areas','Area + cover type.',bg='#e2ebe5')
+def control(id,key,x,y,w=246):
+ paint(zone(id,x,y,w,64,'paramctrl',param=f'[Parameters].[{key}]',mode='compact'),'#ffffff',8)
+control(10,'FocusArea',40,252)
+control(11,'LandClass',40,330)
+textzone(8,40,414,246,78,'Add comparisons','Leave unused slots blank.',bg='#e2ebe5',size=14)
+for i,k in enumerate(['Compare1','Compare2','Compare3']):control(14+i,k,40,502+78*i)
+textzone(9,40,760,246,170,'What does the % mean?',
+ '40% = 40 of every 100 classified hectares.\n\nunit668 is an area ID, not a rank.',bg='#e2ebe5',size=14)
+textzone(18,40,956,246,180,'Small categories',
+ 'Chart 1: choose Selected cover type to enlarge small values.\n\nCheck its adjusted scale. Charts 2 and 3 stay at 0–100%.',bg='#e2ebe5',size=14)
+control(17,'FocusView',342,172,380)
+textzone(4,742,172,610,94,'Read the bars',
+ 'One bar per period. Colours identify cover types. All cover types totals 100%; Selected cover type uses an adjusted scale.',size=14)
+textzone(5,342,794,1008,70,'',
+ 'READ THE LINES  •  Each colour identifies an area. A rising line means the selected cover type occupies a larger share of classified land. All seven periods are shown.',size=16)
+textzone(6,342,1214,1008,70,'',
+ 'READ THE DOTS  •  Each row is an area. Later dot to the right = increase; to the left = decrease. Overlapping dots mean equal or very close values.',size=16)
+textzone(19,40,1210,246,80,'Chart 3 periods','Earlier and later maps.',bg='#e2ebe5',size=14)
+control(12,'StartEpoch',40,1290)
+control(13,'EndEpoch',40,1368)
+textzone(23,40,1444,246,48,body='Choose the earlier period first.',bg='#e2ebe5')
+for i,(name,x,y,w,h) in enumerate([('T01_Composition',342,282,652,450),('T02_ClassTrajectories',342,874,820,276),('T03_EndpointComparison',342,1294,820,188)]):
+ paint(zone(20+i,x,y,w,h,name=name))
+for id,name,key,x,y,w,h in [(40,'T01_Composition','class_label',1006,282,346,450),(41,'T02_ClassTrajectories','unit_label',1178,874,174,276),(42,'T03_EndpointComparison','IntervalRole',1178,1294,174,188)]:
+ paint(zone(id,x,y,w,h,'color',name=name,param=ref(key)))
+textzone(7,24,1524,1352,120,'About the data',
+ 'Percentages exclude missing and unclassified land; hover for hectares and data coverage. A change from 30% to 35% is +5 percentage points. Areas may overlap: do not add their hectares.\nSource: State of Victoria / DEECA, Victorian Land Cover Time Series (2020), CC BY 4.0. Multi-year maps, not annual measurements. First file: 1985–1990 (catalogue: 1987–1990). Historical cover does not measure habitat health or prove that management worked.',bg='#eef2ef',size=13)
 sid(dash)
 windows=sub(root,'windows',**{'source-height':'30'})
 for name in ['T01_Composition','T02_ClassTrajectories','T03_EndpointComparison']:

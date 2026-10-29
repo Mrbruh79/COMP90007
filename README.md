@@ -4,7 +4,7 @@ An environmental atlas for DEECA public servants investigating modelled conserva
 
 ## Run the delivered app
 
-Install dependencies separately in your R environment: `shiny`, `leaflet`, `sf`, `ggplot2`, `jsonlite`, `htmltools`. Use R 4.4 or newer. Submitted scripts do not install packages.
+Install dependencies separately in your R environment: `shiny`, `leaflet`, `sf`, `ggplot2`, `jsonlite`, `htmltools`. Use R 4.4 or newer. The app does not install packages.
 
 From this project's root:
 
@@ -22,16 +22,16 @@ After a fresh clone, run the full land-cover and Tableau rebuild commands below 
 
 ## Explore
 
-- **Explore priorities:** 16 actions, relative ranks and opportunity extent across 1,053 summary areas. Select by map or unit search. Pin up to three areas, compare the action heatmap and download records including explicit missing actions.
-- **Explore landscape change:** select one of 19 classes and two ordered historical epochs. Map end-epoch class share or net share change, inspect all-class changes, compare focused/pinned areas and download all seven epochs with coverage and provenance.
-- **Tableau:** open `tableau/Victoria_Landscape_Change.twbx`. Its `LandscapeChange` dashboard has focused-area composition, class trajectories and start/end comparisons. The portable package contains its CSV. This is a real Tableau workbook, with unit/class/epoch parameters.
+- **Explore priorities:** 16 actions, relative cost-effectiveness ranks and selected-action relevant hectares across 1,053 summary areas. The introduction, action names, live map title and legend explain that higher ranks indicate stronger modelled benefits relative to cost for the chosen action. Select by map or unit search. Pin up to three areas, compare the action heatmap and download records including explicit missing actions.
+- **Explore landscape change:** choose one of 19 cover types and an earlier/later historical period. The introduction and live map title distinguish later-period cover from change between periods. Legends, labelled endpoint values and a percentage-point example explain colours and calculations. Compare selected/pinned areas, inspect all-cover-type changes and follow the chosen type through all seven periods. Downloads retain coverage and provenance.
+- **Tableau:** open `tableau/Victoria_Landscape_Change.twbx`. Its `LandscapeChange` dashboard has focused-area composition, class trajectories and start/end comparisons. Set **Chart 1: what should the bars show?** to **Selected cover type**, then choose a **Cover type** to inspect small categories on an automatic percentage scale starting at zero. **All cover types** restores the 100% stacked overview. The portable package contains its CSV. This is a real Tableau workbook, with unit/class/epoch parameters.
 - **Sources & methods:** dates, denominator definitions, source links and interpretation limits.
 
-Selections and pins are shared across the two Shiny workspaces. Land-cover statistics are per summary area, not per LGA. Units overlap; their values are never summed into combined-area or statewide totals.
+Selections and pins are shared across the two workspaces. Land-cover statistics are per summary area, not per LGA. Units overlap; their values are never summed into combined-area or statewide totals.
 
 ## Sources and processing
 
-SMP4 boundaries and action attributes come from [DEECA's summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). The frozen local snapshot was retrieved **22 October 2026**, and the model is associated with July 2023. It has 1,053 boundaries and 12,403 action records. Source `AREA_20` follows NatureKit's **top 15%** label; the top 5% is included within it. Missing action records are not zeros. Unit 925 has no SMP action records.
+SMP4 boundaries and action attributes come from [DEECA's summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). The frozen local snapshot was retrieved **22 October 2026**, and the model is associated with July 2023. It has 1,053 boundaries and 12,403 action records. The priority map uses only `CE_RANK`. Source `AREA_5` and `AREA_20` are retained in comparison downloads, alongside derived shares, but are not visualised in the interface. `AREA_20` follows NatureKit's **top 15%** label; the top 5% is included within it. Missing action records are not zeros. Unit 925 has no SMP action records.
 
 [Victorian Land Cover Time Series](https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series) supplies seven classified 25 m GeoTIFFs. Downloaded filenames and raster attribute tables use **1985-1990** for the first epoch, although the catalogue describes it as 1987-1990. The app follows the downloaded files. These are multi-year epochs ending in 2019, not annual or current observations.
 
@@ -66,6 +66,6 @@ python3 scripts/package_submission.py
 
 See `docs/VALIDATION.md` for current evidence. The package builder produces `dist/Victoria_Landscape_Atlas.zip`, including code, prepared data, original geometry and the workbook. R packages must already be installed. It excludes raw rasters, historical prototypes, credentials and Git metadata.
 
-The old PDF activity data and progress workbook are preserved under `archive/progress/` for history. They are not read by the active app or revised Tableau views. The supplied assignment specification is in `docs/redesign/ASSIGNMENT_SPEC.txt`. This task covers code and Tableau; report/video/peer-evaluation work is outside the requested scope.
+The old PDF activity data and progress workbook are preserved under `archive/progress/` for history. They are not read by the active app or revised Tableau views.
 
-Attribution: State of Victoria, Department of Energy, Environment and Climate Action. Land-cover data are provided under CC BY 4.0. SMP4 remains subject to its own source terms. This student project does not represent departmental advice. Modelled opportunities do not prove completed work or recovery; land-cover classes do not measure habitat quality, species abundance or management effectiveness. Net class totals do not establish pixel transitions or causes of change.
+Attribution: State of Victoria, Department of Energy, Environment and Climate Action. Land-cover data are provided under CC BY 4.0. SMP4 remains subject to its own source terms. Modelled opportunities do not prove completed work or recovery; land-cover classes do not measure habitat quality, species abundance or management effectiveness. Net class totals do not establish pixel transitions or causes of change.

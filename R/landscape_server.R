@@ -4,7 +4,7 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   e<-d$landcover$epochs;classes<-d$landcover$classes
   valid_period <- reactive({
     req(input$start_epoch %in% e$epoch_id,input$end_epoch %in% e$epoch_id)
-    validate(need(match(input$start_epoch,e$epoch_id)<match(input$end_epoch,e$epoch_id),'Choose an earlier start epoch.'))
+    validate(need(match(input$start_epoch,e$epoch_id)<match(input$end_epoch,e$epoch_id),'Choose an earlier period before the later period.'))
     list(from=input$start_epoch,to=input$end_epoch)
   })
   chosen_class<-reactive({req(input$land_class %in% classes$class_code);as.integer(input$land_class)})
@@ -36,7 +36,7 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
       tags$button(type='button',class='unit-link',`data-focus`=id,unit_name(id)),
       tags$button(type='button',class='remove-pin',`data-remove`=id,`aria-label`=paste('Remove',unit_name(id)),'Remove'))),
     p(class='caption',notice())))
-  map_data<-reactive({p<-valid_period();landcover_map_spec(d,chosen_class(),p$from,p$to,input$land_metric %||% 'share')})
+  map_data<-reactive({p<-valid_period();landcover_map_spec(d,chosen_class(),p$from,p$to,input$land_metric %||% 'change')})
   output$landcover_map<-leaflet::renderLeaflet({
     s<-isolate(map_data());id<-isolate(selected())
     leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12)) |>
@@ -83,9 +83,13 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
     b<-sf::st_bbox(d$areas[d$areas$microID==selected(),])
     leaflet::leafletProxy('landcover_map') |> leaflet::fitBounds(b[['xmin']],b[['ymin']],b[['xmax']],b[['ymax']])
   })
+  output$land_map_title<-renderText({
+    if((input$land_metric %||% 'change')=='change') paste('Change in',tolower(class_label()),'cover:',period_label())
+    else paste(class_label(),'cover in',e$epoch_label[match(input$end_epoch,e$epoch_id)])
+  })
   output$land_map_caption<-renderText({
-    if((input$land_metric %||% 'share')=='change') paste(class_label(),'/',period_label(),'/ symmetric',-map_data()$limit,'to',paste0('+',map_data()$limit),'pp scale for this class and period')
-    else paste(class_label(),'/',e$epoch_label[match(input$end_epoch,e$epoch_id)],'/ fixed 0-100% scale')
+    if((input$land_metric %||% 'change')=='change') paste('Green = increased share; brown = decreased share; pale = little or no change. Later minus earlier, in percentage points (pp). Legend range:',-map_data()$limit,'to',paste0('+',map_data()$limit),'/ this cover type and period pair.')
+    else paste('Darker green = a larger percentage of classified land mapped as',tolower(class_label()),'in',paste0(e$epoch_label[match(input$end_epoch,e$epoch_id)],'.'),'The earlier period is used in the comparisons below.')
   })
   comparison<-reactive({p<-valid_period();landcover_change(d,shown_ids(),p$from,p$to,chosen_class())})
   all_changes<-reactive({p<-valid_period();landcover_change(d,selected(),p$from,p$to)})
@@ -93,36 +97,42 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   output$land_focus<-renderUI({
     x<-comparison();r<-x[x$microID==selected(),];req(nrow(r))
     a<-action_row(d,selected(),input$action %||% 'Control Foxes')
-    tagList(p(class='detail-label','Focused summary area'),h2(unit_name(selected())),
-      h3(class_label()),p(class='land-share',fmt(r$share_pct_start,'%'),span(' to '),fmt(r$share_pct_end,'%')),
-      p(class='caption',period_label()),
-      p(paste('Net change:',fmt(r$change_pp,' pp'))),
-      p(class='caption',paste('Classified coverage:',fmt(r$coverage_pct_start,'%'),'to',fmt(r$coverage_pct_end,'%'),'of polygon area')),
-      tags$hr(),p(class='detail-label','Later model context: SMP4 / July 2023'),
-      p(paste(action_labels[[input$action %||% 'Control Foxes']],if(nrow(a)) paste('/ rank',a$CE_RANK) else '/ No action record')),
-      tags$button(type='button',class='text-button',`data-page`='explore','Investigate management opportunities'),
-      p(class='caption','A rank is a relative model comparison. Historical land cover does not show whether an action was delivered.'))
+    tagList(p(class='detail-label','Selected area'),h2(unit_name(selected())),
+      h3(class_label()),
+      div(class='land-endpoints',
+        div(p(class='detail-label',paste('Earlier:',e$epoch_label[match(r$start_epoch,e$epoch_id)])),p(class='land-share',fmt(r$share_pct_start,'%'))),
+        div(p(class='detail-label',paste('Later:',e$epoch_label[match(r$end_epoch,e$epoch_id)])),p(class='land-share',fmt(r$share_pct_end,'%')))),
+      p(class='land-net-change',paste('Change:',fmt(r$change_pp,' percentage points'))),
+      p(class='caption',paste('Change in mapped area:',fmt(r$change_ha,' hectares'))),
+      p(class='caption','Percentages describe land mapped as this cover type among the land the source could classify.'),
+      tags$details(tags$summary('Data coverage and management context'),
+        p(class='caption',paste('Classified land:',fmt(r$coverage_pct_start,'%'),'in the earlier period;',fmt(r$coverage_pct_end,'%'),'in the later period. Unclassified or missing land is excluded from cover percentages.')),
+        p(class='detail-label','Separate management model: SMP4 / July 2023'),
+        p(paste(action_labels[[input$action %||% 'Control Foxes']],if(nrow(a)) paste('/ rank',a$CE_RANK) else '/ No action record')),
+        tags$button(type='button',class='text-button',`data-page`='explore','Investigate management opportunities'),
+        p(class='caption','This management rank is separate from historical land-cover change. The historical maps do not show whether management was delivered or caused a change.')))
   })
+
   make_table<-function(x,caption) tags$table(class='evidence-table',
-    tags$caption(caption),tags$thead(tags$tr(lapply(c('Area','Class','Start %','End %','Net pp','Net grid ha','Classified coverage start / end'),function(t) tags$th(scope='col',t)))),
+    tags$caption(caption),tags$thead(tags$tr(lapply(c('Area','Cover type','Earlier cover (%)','Later cover (%)','Change (percentage points)','Change (hectares)','Classified land (%) earlier / later'),function(t) tags$th(scope='col',t)))),
     tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(
       tags$th(scope='row',unit_name(x$microID[i])),tags$td(x$class_label[i]),
       tags$td(fmt(x$share_pct_start[i])),tags$td(fmt(x$share_pct_end[i])),tags$td(fmt(x$change_pp[i])),tags$td(fmt(x$change_ha[i])),
       tags$td(paste(fmt(x$coverage_pct_start[i],'%'),fmt(x$coverage_pct_end[i],'%'),sep=' / '))))))
-  output$land_comparison<-renderUI(make_table(comparison(),paste(class_label(),'/',period_label(),'/ units kept separate')))
+  output$land_comparison<-renderUI(make_table(comparison(),paste(class_label(),'/',period_label(),'/ each area shown separately')))
   output$class_changes<-renderPlot({
     x<-all_changes();x$value<-if((input$change_unit %||% 'pp')=='ha') x$change_ha else x$change_pp
-    validate(need(any(!is.na(x$value)),'This unit has no classified coverage in one or both selected epochs.'))
+    validate(need(any(!is.na(x$value)),'This area has no classified coverage in one or both selected periods.'))
     x$class_label<-factor(x$class_label,levels=rev(x$class_label))
     ggplot2::ggplot(x,ggplot2::aes(value,class_label))+
       ggplot2::geom_vline(xintercept=0,colour='#7d8b7e',linewidth=.4)+
       ggplot2::geom_segment(ggplot2::aes(x=0,xend=value,yend=class_label,colour=value>=0),linewidth=3)+
       ggplot2::geom_point(ggplot2::aes(colour=value>=0),size=2)+
       ggplot2::scale_colour_manual(values=c('FALSE'='#9a613b','TRUE'='#285f47'),guide='none')+
-      ggplot2::labs(x=if((input$change_unit %||% 'pp')=='ha') 'Net change in projected grid hectares' else 'Net change in class share (percentage points)',y=NULL,
+      ggplot2::labs(x=if((input$change_unit %||% 'pp')=='ha') 'Change in mapped area (projected hectares)' else 'Change in cover share (percentage points)',y=NULL,
         subtitle=paste(unit_name(selected()),'/',period_label()))+chart_theme()+
       ggplot2::theme(axis.text.y=ggplot2::element_text(size=10),panel.grid.major.y=ggplot2::element_blank())
-  },res=110,alt='Net change by land-cover class in the focused area. Exact endpoint values are in the evidence table.')
+  },res=110,alt='Change between the chosen periods for all 19 cover types in the selected area. Right and green indicate an increase; left and brown indicate a decrease. Exact values are in the tables.')
   output$land_trends<-renderPlot({
     x<-d$landcover$summary;x<-x[x$microID %in% shown_ids() & x$class_code==chosen_class(),]
     x$epoch_label<-factor(x$epoch_label,levels=e$epoch_label);x$area<-factor(unit_name(x$microID),levels=unit_name(shown_ids()))
@@ -130,10 +140,10 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
       ggplot2::geom_line(linewidth=.8)+ggplot2::geom_point(size=2)+
       ggplot2::scale_y_continuous(limits=c(0,100))+
       ggplot2::scale_colour_manual(values=c('#285f47','#b47737','#6c7896','#9b6670'))+
-      ggplot2::labs(x=NULL,y='Share of classified area (%)',colour=NULL,subtitle=class_label())+chart_theme()+
+      ggplot2::labs(x=NULL,y='Cover share (%)',colour=NULL,subtitle=paste(class_label(),'/ all seven historical periods'))+chart_theme()+
       ggplot2::theme(axis.text.x=ggplot2::element_text(size=10))
-  },res=110,alt='Class share across all seven historical epochs, with a separate line for each focused and pinned area.')
-  output$land_values<-renderUI({p<-valid_period();make_table(landcover_change(d,shown_ids(),p$from,p$to),paste('All classes /',period_label(),'/ download includes all seven epochs'))})
+  },res=110,alt='Percentage of classified land mapped as the chosen cover type across all seven periods. Each line represents a separate selected or pinned area.')
+  output$land_values<-renderUI({p<-valid_period();make_table(landcover_change(d,shown_ids(),p$from,p$to),paste('All cover types /',period_label(),'/ each area shown separately'))})
   output$download_landcover<-downloadHandler(filename=function() paste0('landcover-',selected(),'-and-comparison.csv'),content=function(file) {
     x<-d$landcover$summary;x<-x[x$microID %in% shown_ids(),]
     x$record_status<-ifelse(is.na(x$area_ha),'No classified coverage',ifelse(x$area_ha==0,'Class absent in classified area','Available'))
@@ -148,13 +158,13 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   output$tableau<-renderUI({
     config<-tableau_config()
     if(config$valid) div(id='tableau-host',`data-view-url`=config$url,`data-release`=d$landcover$manifest$release,
-      div(id='tableau-status',role='status',`aria-live`='polite','Loading the published Tableau dashboard...'),
+      div(id='tableau-status',role='status',`aria-live`='polite','Loading the dashboard...'),
       tags$button(type='button',id='tableau-retry',class='button-outline','Retry Tableau'),
       tags$a(href=config$url,target='_blank',rel='noopener','Open Tableau dashboard'),div(id='tableau-mount'),
-      p(class='caption','Focused and pinned units are kept separate. Local evidence remains available below.'))
-    else div(class='empty-state',role='status',h3('Explore the companion Tableau workbook'),
-      p('Open the portable workbook in Tableau Desktop to explore land-cover composition and class trajectories. Local publication is deferred.'),
-      if(config$configured) p('The configured address is invalid. Use the HTTPS Tableau Public /views/Workbook/LandscapeChange address.'),
+      p(class='caption','Focused and pinned areas are shown separately. Historical trends and exact values are available below.'))
+    else div(class='empty-state',role='status',h3('Explore the interactive workbook'),
+      p('Download and open the workbook in Tableau. Use its own area, cover-type and period controls to explore the same historical data.'),
+      if(config$configured) p('The online dashboard is currently unavailable. Download the workbook or explore the charts below.'),
       downloadButton('download_tableau','Download Tableau workbook'))
   })
   observe({
@@ -164,17 +174,17 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   })
   observeEvent(input$tableau_parameter,{
     p<-input$tableau_parameter
-    slot<-match(p$name,paste('Compare area',1:3))
+    slot<-match(p$name,paste0('Additional area ',1:3,' (optional)'))
     if(!is.na(slot) && p$value %in% c('',d$areas$microID)) {
       slots<-rep('',3);current<-head(setdiff(pins(),selected()),3);slots[seq_along(current)]<-current
       slots[slot]<-p$value;pins(unique(slots[nzchar(slots)]))
     }
-    if(identical(p$name,'Focus area') && p$value %in% d$areas$microID) updateSelectizeInput(session,'area',selected=p$value)
-    if(identical(p$name,'Land-cover class') && p$value %in% classes$class_label)
+    if(identical(p$name,'Main area') && p$value %in% d$areas$microID) updateSelectizeInput(session,'area',selected=p$value)
+    if(identical(p$name,'Cover type') && p$value %in% classes$class_label)
       updateSelectInput(session,'land_class',selected=classes$class_code[match(p$value,classes$class_label)])
-    if(identical(p$name,'Start epoch') && p$value %in% head(e$epoch_label,-1))
+    if(identical(p$name,'Earlier period') && p$value %in% head(e$epoch_label,-1))
       updateSelectInput(session,'start_epoch',selected=e$epoch_id[match(p$value,e$epoch_label)])
-    if(identical(p$name,'End epoch') && p$value %in% e$epoch_label && match(p$value,e$epoch_label)>match(input$start_epoch,e$epoch_id))
+    if(identical(p$name,'Later period') && p$value %in% e$epoch_label && match(p$value,e$epoch_label)>match(input$start_epoch,e$epoch_id))
       updateSelectInput(session,'end_epoch',selected=e$epoch_id[match(p$value,e$epoch_label)])
   })
   invisible(list(comparison=comparison,all_changes=all_changes,map_data=map_data))

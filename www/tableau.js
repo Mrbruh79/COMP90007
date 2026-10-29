@@ -1,6 +1,6 @@
 /* Tableau Public Embedding API v3. Local evidence never depends on this module. */
 (function (root) {
-  const PARAMETERS = {focus:'Focus area',compare1:'Compare area 1',compare2:'Compare area 2',compare3:'Compare area 3',class:'Land-cover class',start:'Start epoch',end:'End epoch'};
+  const PARAMETERS = {focus:'Main area',compare1:'Additional area 1 (optional)',compare2:'Additional area 2 (optional)',compare3:'Additional area 3 (optional)',class:'Cover type',start:'Earlier period',end:'Later period'};
   class LandscapeBridge {
     constructor(client, report) {
       this.client = client; this.report = report; this.desired = null;
@@ -9,9 +9,9 @@
     async connect(release) {
       const parameters = await this.client.getParametersAsync();
       const found = Object.fromEntries(parameters.map(p => [p.name, p.currentValue.value]));
-      if (found['Data release'] !== release) throw new Error('The published workbook uses a different data release.');
+      if (found['Data release'] !== release) throw new Error('The dashboard uses a different data release.');
       for (const name of Object.values(PARAMETERS)) {
-        if (!(name in found)) throw new Error('The published workbook is missing its selection controls.');
+        if (!(name in found)) throw new Error('The dashboard selection controls are unavailable.');
         this.applied[name] = found[name];
       }
       if (this.closed) return;
@@ -37,7 +37,7 @@
         }
         if (!this.closed) this.report('ready', 'Tableau is connected. Area, class and epoch controls are synchronised.');
       } catch (error) {
-        if (!this.closed) this.report('error', 'Tableau could not apply your selection. Retry, or use the local evidence.');
+        if (!this.closed) this.report('error', 'Your selection could not be applied. Retry, or explore the charts below.');
       } finally { this.busy = false; }
     }
     close() { this.closed = true; this.ready = false; }
@@ -55,9 +55,9 @@
     if (current) { current.bridge?.close(); clearTimeout(current.timer); }
     const ticket = {host, bridge:null, timer:null}; current = ticket;
     host.querySelector('#tableau-mount').replaceChildren();
-    status(host,'loading','Loading the published Tableau dashboard…');
+    status(host,'loading','Loading the dashboard…');
     ticket.timer = setTimeout(() => {
-      if (current === ticket) status(host,'timeout','Tableau is taking longer than expected. Local charts and data are available below; you can retry.');
+      if (current === ticket) status(host,'timeout','The dashboard is taking longer than expected. Charts and data are available below; you can retry.');
     },25000);
     try {
       // The library comes from the same host as the workbook to match its version.
@@ -66,7 +66,7 @@
       if (current !== ticket || !host.isConnected) return;
       const viz = new TableauViz();
       viz.id = 'landscape-viz'; viz.src = host.dataset.viewUrl; viz.toolbar = 'bottom';
-      viz.hideTabs = true; viz.width = '100%'; viz.height = '1250px';
+      viz.hideTabs = true; viz.width = '100%'; viz.height = '1710px';
       viz.addEventListener(TableauEventType.FirstInteractive,async () => {
         if (current !== ticket) return;
         clearTimeout(ticket.timer);
@@ -74,11 +74,11 @@
           ticket.bridge = new LandscapeBridge(viz.workbook,(state,message)=>status(host,state,message));
           ticket.bridge.desired = {...desired};
           await ticket.bridge.connect(host.dataset.release);
-        } catch(error) { status(host,'error',error.message + ' Use the local evidence below.'); }
+        } catch(error) { status(host,'error',error.message + ' Explore the charts below.'); }
       });
       viz.addEventListener('vizloaderror',() => {
         if (current !== ticket) return;
-        clearTimeout(ticket.timer);status(host,'error','The published Tableau dashboard could not load. Check your connection or use the local evidence below.');
+        clearTimeout(ticket.timer);status(host,'error','The dashboard could not load. Check your connection or explore the charts below.');
       });
       viz.addEventListener(TableauEventType.ParameterChanged,async event => {
         if (current !== ticket || !ticket.bridge?.ready || ticket.bridge.busy) return;
@@ -96,7 +96,7 @@
       host.querySelector('#tableau-mount').append(viz);
     } catch(error) {
       library = null; clearTimeout(ticket.timer);
-      if (current === ticket) status(host,'error','Tableau could not be reached. Local charts and downloadable data remain available below.');
+      if (current === ticket) status(host,'error','The dashboard could not be reached. Charts and downloadable data remain available below.');
     }
   }
   function discover() {

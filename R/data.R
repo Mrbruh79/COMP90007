@@ -1,10 +1,10 @@
 `%||%` <- function(x,y) if(is.null(x)) y else x
-action_labels <- c('Control Foxes'='Foxes','Control Cats'='Cats','Control Deer'='Deer',
-  'Control Rabbits'='Rabbits','Control All Weeds'='All weeds','Control Woody Weeds'='Woody weeds',
-  'Control Non-Woody Weeds'='Non-woody weeds','Control Grazing'='Domestic stock',
-  'Control Goats'='Goats','Control Horses'='Horses','Control Pigs'='Pigs',
-  'Control Overabundant Kangaroos'='Kangaroos','Ecological Burning'='Ecological burning',
-  'Restore Wetland'='Wetland restoration','Revegetate'='Revegetation','Permanent Protection'='Protection')
+action_labels <- c('Control Foxes'='Fox control','Control Cats'='Feral cat control','Control Deer'='Deer control',
+  'Control Rabbits'='Rabbit control','Control All Weeds'='All-weeds control','Control Woody Weeds'='Woody-weeds control',
+  'Control Non-Woody Weeds'='Non-woody-weeds control','Control Grazing'='Livestock grazing control',
+  'Control Goats'='Goat control','Control Horses'='Horse control','Control Pigs'='Pig control',
+  'Control Overabundant Kangaroos'='Overabundant-kangaroo control','Ecological Burning'='Ecological burning',
+  'Restore Wetland'='Wetland restoration','Revegetate'='Revegetation','Permanent Protection'='Permanent protection')
 ink <- '#203c32'
 rank_palette <- grDevices::colorRampPalette(c('#edf2df','#b8d398','#6fa577','#285f47'))(101)
 rank_colour <- function(rank) ifelse(is.na(rank),'#e1e3df',rank_palette[pmax(1,pmin(101,as.integer(rank)+1))])
@@ -26,22 +26,16 @@ load_atlas <- function() {
   stopifnot(!anyDuplicated(paste(d$actions$microID,d$actions$Action)),all(d$actions$microID %in% d$areas$microID))
   d
 }
-map_spec <- function(d, action, metric='rank') {
-  choices <- list(rank=list(field='CE_RANK',label='Median cost-effectiveness rank',unit='rank'),
-    share15=list(field='share15',label='Top-15% share of relevant area',unit='%'),
-    hectares=list(field='AREA_20',label='Top-15% opportunity extent',unit='ha'))
-  if (!metric %in% names(choices)) metric <- 'rank'
-  s <- choices[[metric]]
+map_spec <- function(d, action) {
   rows <- d$actions[d$actions$Action==action,]
-  s$values <- rows[[s$field]][match(d$areas$microID,rows$microID)]
-  s$limit <- if(metric=='hectares') max(c(1,s$values),na.rm=TRUE) else 100
-  s$colours <- rank_colour(100*s$values/s$limit)
-  s$formatted <- ifelse(is.na(s$values),'No action record',paste(number(s$values,if(metric=='share15') 1 else 0),s$unit))
-  s
+  values <- rows$CE_RANK[match(d$areas$microID,rows$microID)]
+  list(field='CE_RANK',label='Cost-effectiveness rank',unit='rank',
+    values=values,limit=100,colours=rank_colour(values),
+    formatted=ifelse(is.na(values),'No action record',paste('Rank',number(values),'(0–100 scale)')))
 }
 map_legend <- function(s) htmltools::HTML(paste0('<strong>',s$label,'</strong>',
   '<div class="rank-gradient" role="img" aria-label="Pale to dark green from zero to ',number(s$limit),' ',s$unit,'"></div>',
-  '<div class="rank-ticks"><span>0</span><span>',number(s$limit/2),'</span><span>',number(s$limit),'</span></div>',
+  '<div class="rank-ticks"><span>0 · Lower</span><span>',number(s$limit/2),'</span><span>',number(s$limit),' · Higher</span></div>',
   '<div class="rank-missing"><i></i>No action record</div>'))
 tableau_config <- function(path='config/app.json') {
   config <- if(file.exists(path)) jsonlite::fromJSON(path) else list()

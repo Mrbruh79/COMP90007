@@ -24,7 +24,7 @@ landcover_change <- function(d,ids,from,to,class_code=NULL) {
   stopifnot(!is.null(d$landcover))
   epochs<-d$landcover$epochs
   if(!from %in% epochs$epoch_id || !to %in% epochs$epoch_id ||
-     match(from,epochs$epoch_id)>=match(to,epochs$epoch_id)) stop('Choose an earlier start epoch than the end epoch.')
+     match(from,epochs$epoch_id)>=match(to,epochs$epoch_id)) stop('Choose an earlier period before the later period.')
   x<-d$landcover$summary
   x<-x[x$microID %in% ids & (is.null(class_code) | x$class_code %in% class_code),]
   a<-x[x$epoch_id==from,];b<-x[x$epoch_id==to,]
@@ -45,11 +45,12 @@ landcover_map_spec <- function(d,code,from,to,metric='share') {
   limit<-if(metric=='change') max(1,ceiling(max(c(0,abs(vals)),na.rm=TRUE))) else 100
   index<-if(metric=='change') pmax(1,pmin(201,round(100*vals/limit)+101)) else pmax(1,pmin(101,round(vals)+1))
   colours<-ifelse(is.na(vals),'#e1e3df',pal[index])
-  label<-if(metric=='change') 'Net change in class share (pp)' else 'Share of classified area (%)'
+  label<-if(metric=='change') 'Change in cover (percentage points)' else 'Cover in later period (%)'
   list(values=vals,colours=colours,rows=x,label=label,metric=metric,limit=limit,
-    formatted=ifelse(is.na(vals),'No classified coverage',paste0(ifelse(metric=='change' & vals>0,'+',''),number(vals,1),if(metric=='change') ' pp' else '%')))
+    formatted=ifelse(is.na(vals),'No classified coverage',paste0(ifelse(metric=='change' & vals>0,'+',''),number(vals,1),if(metric=='change') ' percentage points' else '%')))
 }
 landcover_legend <- function(s) htmltools::HTML(paste0('<strong>',s$label,'</strong>',
   '<div class="land-gradient ',if(s$metric=='change') 'diverging' else '', '" role="img" aria-label="',s$label,'"></div>',
-  '<div class="rank-ticks">',if(s$metric=='change') paste0('<span>-',number(s$limit),'</span><span>0</span><span>+',number(s$limit),'</span>') else '<span>0</span><span>50</span><span>100</span>',
-  '</div><div class="rank-missing"><i></i>No classified coverage</div>'))
+  '<div class="rank-ticks">',if(s$metric=='change') paste0('<span>-',number(s$limit),'</span><span>0</span><span>+',number(s$limit),'</span>') else '<span>0%</span><span>50%</span><span>100%</span>',
+  '</div>',if(s$metric=='change') '<div class="rank-ticks land-directions"><span>Decrease</span><span>Increase</span></div>' else '',
+  '<div class="rank-missing"><i></i>No classified coverage</div>'))
