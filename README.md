@@ -1,67 +1,71 @@
-# Mapping Conservation Priorities and Tracking Biodiversity Management in Victoria
+# Mapping Conservation Priorities and Land-Cover Change in Victoria
 
-An R Shiny application for DEECA public servants comparing conservation opportunities and reviewing reported management activity.
+An environmental atlas for DEECA public servants investigating modelled conservation opportunities alongside historical landscape classifications. Desktop is the primary device class.
 
-The interface uses an atlas layout: a large map, a narrow control rail, an area-action heatmap and aligned opportunity bars. The progress view contains annual trends, priority-location shares, cumulative restoration charts and a selected-year target-gap dot plot.
+## Run the delivered app
 
-## Run locally
+Install dependencies separately in your R environment: `shiny`, `leaflet`, `sf`, `ggplot2`, `jsonlite`, `htmltools`. Use R 4.4 or newer. Submitted scripts do not install packages.
 
-Use R 4.4 or newer. Install these packages through your R environment before running the application: `shiny`, `leaflet`, `sf`, `ggplot2`, `jsonlite`, `htmltools`. Tests additionally require `testthat`. Application and preparation scripts do not install packages.
-
-From this repository's root, run in R:
+From this project's root:
 
 ```r
-source("scripts/prepare_data.R")  # First run: acquire public DEECA spatial data
 shiny::runApp()
 ```
 
-The preparation step requires internet access and writes a local `data/smp_cache.rds`. Later sessions use that cache and can run without external map tiles. The cache is excluded from Git; the repository includes the data acquisition code and attributed historical activity CSV. Do not run the preparation script during every app session.
+The local handoff ZIP includes `data/smp_cache.rds`, original boundaries, and prepared land-cover summaries. It needs no raster processing or online map tiles to run. Place labels are optional and require an internet connection. When cloning this repository, prepare the spatial cache first:
 
-## What works
-
-- Select any of 16 management actions and explore 1,053 summary areas.
-- Click a map polygon or choose a unit by keyboard.
-- Compare the focused area with up to three pinned areas in the heatmap.
-- Select a heatmap cell to change both the map action and selected area.
-- Compare top-5% and top-15% extent in hectares or as a share of relevant area.
-- Download all available action records for your comparison, including explicit missing rows and source metadata.
-- Review four financial years of reported activity, with year selection, action filtering and data download.
-- Read definitions, dates, caveats and official source links within the app.
-
-## Tableau status
-
-The companion `tableau/Biodiversity_2037_Progress.twbx` is packaged with its CSV and has been opened and tested in Tableau Desktop 2026.2. It contains four worksheets, the ProgressOverview dashboard, and working year/action parameters. Download it from the app or open it directly in Desktop.
-
-Publication and live integration are deferred at the user's request. The Shiny app runs its local R progress charts. The API v3 bridge is implemented and unit-tested, but no live Tableau URL is configured and end-to-end embedding is not verified. This standalone delivery does not yet demonstrate the course's embedded Tableau requirement.
-
-Later, publish ProgressOverview and set `tableau_view_url` in `config/app.json` (or `TABLEAU_VIEW_URL`) to the HTTPS Tableau Public /views/Workbook/ProgressOverview URL. Test anonymous loading and both directions of year/action changes before claiming integration complete.
-
-## Data and interpretation
-
-The spatial source is [DEECA's SMP4 summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). Geometry is repaired and simplified to 100 metres for display; area values always come from source attributes. `CE_RANK` is the median relative cost-effectiveness rank. `AREA_20` follows NatureKit's published label, **Area in Top 15%**. Top-5% hectares are already included in top-15% hectares.
-
-Historical activity was transcribed from the [Biodiversity 2037 progress report](https://www.environment.vic.gov.au/__data/assets/pdf_file/0025/722563/Bio2037-Progress-update-2020-2022-final.pdf), printed pages 5, 7, 11, 15 and 19. It covers 2018-19 through 2021-22 and includes multiple contributing organisations. Row-level source and page references are included in `data/activity.csv`.
-
-Model ranks do not measure completed work. Reported hectares do not establish biodiversity recovery. Statewide historical figures cannot be filtered to individual summary areas. Missing action rows are shown as missing, including Unit 925. Revegetation has a method change around 2020-21. These limits are visible in the interface.
-
-Attribution: State of Victoria, Department of Energy, Environment and Climate Action. Third-party data remain subject to their source terms; no new licence is asserted over them. This student project does not represent departmental advice.
-
-## Check the project
-
-```r
-source("tests/run_tests.R")
+```sh
+Rscript scripts/prepare_data.R
 ```
 
-The reference-value tests use the snapshot retrieved on 21 October 2026. Upstream updates may require reviewing those reference values rather than silently accepting changed figures. See `docs/VALIDATION.md` for the tested flows and remaining limits.
+After a fresh clone, run the full land-cover and Tableau rebuild commands below before launching. The prepared land-cover release is tied to the exact spatial cache fingerprint. If you refresh the spatial source, rebuild the land-cover summaries and Tableau input together rather than mixing releases.
 
-## Structure
+## Explore
 
-`app.R` starts the app. `R/data.R` defines data access and calculations, `R/ui.R` defines the layout, and `R/server.R` coordinates interactions. `www/` contains the visual styles and browser event bridge. `scripts/prepare_data.R` acquires the public spatial source, and `tests/` checks data and server behaviour.
+- **Explore priorities:** 16 actions, relative ranks and opportunity extent across 1,053 summary areas. Select by map or unit search. Pin up to three areas, compare the action heatmap and download records including explicit missing actions.
+- **Explore landscape change:** select one of 19 classes and two ordered historical epochs. Map end-epoch class share or net share change, inspect all-class changes, compare focused/pinned areas and download all seven epochs with coverage and provenance.
+- **Tableau:** open `tableau/Victoria_Landscape_Change.twbx`. Its `LandscapeChange` dashboard has focused-area composition, class trajectories and start/end comparisons. The portable package contains its CSV. This is a real Tableau workbook, with unit/class/epoch parameters.
+- **Sources & methods:** dates, denominator definitions, source links and interpretation limits.
 
-## Current development
+Selections and pins are shared across the two Shiny workspaces. Land-cover statistics are per summary area, not per LGA. Units overlap; their values are never summed into combined-area or statewide totals.
 
-The atlas also supports rank, top-15% share and hectare map measures, optional place labels, zoom to the selected area and pinned-area outlines. See `docs/VALIDATION.md` for current evidence and remaining gates, and `tableau/README.md` for the workbook contract. Run `Rscript scripts/prepare_tableau.R` and `node tests/progress_bridge.cjs` alongside the R tests. Planning documents supplied by the team are preserved under `docs/planning`; their planned statuses are historical context.
+## Sources and processing
 
-## Package for handoff
+SMP4 boundaries and action attributes come from [DEECA's summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). The frozen local snapshot was retrieved **22 October 2026**, and the model is associated with July 2023. It has 1,053 boundaries and 12,403 action records. Source `AREA_20` follows NatureKit's **top 15%** label; the top 5% is included within it. Missing action records are not zeros. Unit 925 has no SMP action records.
 
-Run `python3 scripts/package_submission.py` after preparing the data. The local ZIP includes the frozen spatial cache, workbook, code, source notes and dependency versions. It excludes credentials, Git metadata, raw downloads and temporary Tableau files. Open the extracted folder and run `shiny::runApp()`; installed R packages are still required.
+[Victorian Land Cover Time Series](https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series) supplies seven classified 25 m GeoTIFFs. Downloaded filenames and raster attribute tables use **1985-1990** for the first epoch, although the catalogue describes it as 1987-1990. The app follows the downloaded files. These are multi-year epochs ending in 2019, not annual or current observations.
+
+`data/landcover/summary.csv.gz` contains 140,049 records at microID x epoch x class grain. Original boundary vertices are transformed to EPSG:3111 and repaired without simplification. Exact cell-coverage fractions determine class proportions. Grid hectares are projected polygon hectares allocated by those proportions. Small numerical residuals are checked before normalisation. The 100 m simplified geometry is used for display only.
+
+Class share divides class area by classified area, codes 1-19, within each unit/epoch. Code 0 is unclassified; TIFF NoData (127) is retained separately. NoData is not changed into an absent class. A complete boundary audit and raster fingerprints are in `data/landcover/manifest.json`.
+
+For a reproducible full-resolution rebuild, also install `terra`, `exactextractr` and `foreign`, then run:
+
+```sh
+Rscript scripts/prepare_landcover.R --refresh
+Rscript scripts/prepare_tableau.R
+python3 scripts/build_tableau.py
+```
+
+The preparation script downloads the 426,746,271-byte official ZIP if absent. Seven epochs processed in about three minutes on the development machine; timing varies by hardware. Raw raster downloads remain under `data/downloads/` and are not needed at runtime. Reopen a regenerated workbook in Tableau Desktop to validate it after changing the schema or calculations.
+
+## Tableau integration boundary
+
+Local development is complete independently of publication. The user has not authorised public deployment, data uploads or Tableau publication for this redesign. `config/app.json` therefore has a blank `tableau_view_url`.
+
+The API v3 bridge is prepared for `LandscapeChange`, synchronising focus, three comparison slots, class, start/end epochs and an exact data-release check. Unit tests use a mock workbook. After publication is authorised, configure the HTTPS Tableau Public `/views/Workbook/LandscapeChange` URL and verify anonymous loading, sizing and both directions of parameter changes against the actual hosted workbook. That live embedding requirement is still outstanding; a local workbook download is not an embedded visualisation.
+
+## Validate and package
+
+```sh
+Rscript tests/run_tests.R
+node tests/landscape_bridge.cjs
+python3 tests/check_tableau.py
+python3 scripts/package_submission.py
+```
+
+See `docs/VALIDATION.md` for current evidence. The package builder produces `dist/Victoria_Landscape_Atlas.zip`, including code, prepared data, original geometry and the workbook. R packages must already be installed. It excludes raw rasters, historical prototypes, credentials and Git metadata.
+
+The old PDF activity data and progress workbook are preserved under `archive/progress/` for history. They are not read by the active app or revised Tableau views. The supplied assignment specification is in `docs/redesign/ASSIGNMENT_SPEC.txt`. This task covers code and Tableau; report/video/peer-evaluation work is outside the requested scope.
+
+Attribution: State of Victoria, Department of Energy, Environment and Climate Action. Land-cover data are provided under CC BY 4.0. SMP4 remains subject to its own source terms. This student project does not represent departmental advice. Modelled opportunities do not prove completed work or recovery; land-cover classes do not measure habitat quality, species abundance or management effectiveness. Net class totals do not establish pixel transitions or causes of change.

@@ -1,0 +1,374 @@
+{
+  "release": "VLCTS2020-027b466b6417-999c1a16",
+  "created_utc": "2026-10-29T08:29:36Z",
+  "download_url": "https://cl-isd-prd-datashare-s3-delivery.s3.amazonaws.com/PrePackages/VIC_LANDCOVER_TS.zip",
+  "archive_bytes": 426746271,
+  "archive_md5": "027b466b64177dff7bf11261e629e1ba",
+  "source_metadata": "https://metashare.maps.vic.gov.au/geonetwork/srv/api/records/81726131-7c8d-52b9-a243-d6a8429966e2/formatters/xml",
+  "attribution": "State of Victoria (Department of Energy, Environment and Climate Action)",
+  "licence": "CC BY 4.0",
+  "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+  "boundary_source": "SMP4_summary_areas/MapServer/0",
+  "boundary_md5": "999c1a16134b5730505721fe0b71bbc9",
+  "spatial_cache_md5": "9c7b8923dab22e61ac581a220de07aa3",
+  "geometry": {
+    "original_invalid": 3,
+    "repaired_invalid": 0,
+    "maximum_repair_area_change_m2": 0.0001,
+    "interior_overlap_pairs": 23,
+    "overlap_pairs_above_1m2": 4
+  },
+  "denominator": "Classified area, codes 1-19, within each unit and epoch. Code 0 is unclassified and excluded; NoData/outside coverage is separate.",
+  "area_method": "Exact polygon-cell class fractions times projected polygon area. Fraction sums normalised after raster coverage closure within 0.1 ha; NoData sentinel preserved separately; units wholly inside raster rectangle. Grid hectares in EPSG:3111, not geodesic hectares.",
+  "boundary_method": "Original source vertices transformed to EPSG:3111 then GEOS make-valid. No simplification for analysis. Units overlap and must not be summed to statewide totals.",
+  "epoch_note": "Downloaded filenames and START_YEAR/END_YEAR use 1985-1990; catalogue says 1987-1990. App follows downloaded metadata.",
+  "transition_analysis": false,
+  "aligned": true,
+  "rasters": [
+    {
+      "filename": "VIC_LANDCOVER_TS_1985_90.tif",
+      "bytes": 49015112,
+      "md5": "42a99b4d10063aadfe5a1cddd3029b93",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_1990_95.tif",
+      "bytes": 47525407,
+      "md5": "2462cbc6a7641acddb12f37602dd433a",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_1995_00.tif",
+      "bytes": 46433816,
+      "md5": "b46ace04f9020fd9da02c060aa92a2ec",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_2000_05.tif",
+      "bytes": 46572819,
+      "md5": "004a509628b251d8f18e03b488fe643a",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_2005_10.tif",
+      "bytes": 46559308,
+      "md5": "6817a30b5cffc8a046564f4818d1ed19",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_2010_15.tif",
+      "bytes": 47593891,
+      "md5": "7132ebb812f7d8ec76faff3225b43671",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "filename": "VIC_LANDCOVER_TS_2015_19.tif",
+      "bytes": 47858102,
+      "md5": "71a7d12531f9cec17226396d53ae71ae",
+      "crs": "EPSG:3111",
+      "resolution_m": [
+        25,
+        25
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "extent": [
+        2031875,
+        2968125,
+        2155625,
+        2944075
+      ],
+      "rows": 31538,
+      "columns": 37450,
+      "nodata_flag": 127,
+      "maximum_nodata_area_ha": 0.125,
+      "maximum_numerical_area_residual_ha": 0.0078,
+      "min_valid_coverage_pct": 59.3263,
+      "class_codes": [
+        -9999,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    }
+  ],
+  "rows": 140049,
+  "units": 1053,
+  "epochs": 7,
+  "classes": 19,
+  "summary_md5": "dd757b79037907736b5d12297e2cea75",
+  "processing_elapsed_seconds": 187.4661,
+  "class_label_and_group_consistency": true,
+  "metadata_description_variants": 0
+}

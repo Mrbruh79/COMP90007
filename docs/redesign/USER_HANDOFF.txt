@@ -1,0 +1,279 @@
+I am developing a university information visualisation assignment using R Shiny and Tableau. Continue the existing project with the scope change described below.
+
+Write in plain, natural language. Do not use em dashes. Avoid generic dashboard styling. Inspect the supplied files before making changes, and distinguish implemented functionality from proposed work.
+
+## Revised topic
+
+Mapping Conservation Priorities and Land-Cover Change in Victoria
+
+Client: Department of Energy, Environment and Climate Action (DEECA).
+Audience: DEECA public servants involved in conservation planning and landscape assessment.
+
+The dashboard should help users answer:
+
+1. Where does DEECA’s model identify relatively cost-effective conservation opportunities?
+2. How has land cover changed in those areas across historical periods?
+3. Which areas warrant further investigation when considering both sources together?
+
+Do not claim that historical land-cover changes were caused by conservation management, or that modelled priorities demonstrate completed work or ecological recovery.
+
+## Assignment requirements
+
+- Build a cohesive, interactive R Shiny interface.
+- Incorporate at least one genuine Tableau visualisation into Shiny.
+- Follow the supplied assignment specification and rubric.
+- Support meaningful exploration and decisions for the stated audience.
+- Prepare the eventual design summary, pattern/use-case summary and client video pitch.
+- Do not include install.packages() in submitted R scripts.
+- Check the supplied specification for any additional constraints.
+
+## Existing project
+
+The previous topic was:
+“Mapping Conservation Priorities and Tracking Biodiversity Management in Victoria.”
+
+The Shiny app has:
+
+1. Explore priorities:
+   - SMP4 summary-area map coloured by the selected action’s cost-effectiveness rank.
+   - Selection by map or area search.
+   - Up to three pinned areas.
+   - Area-action heatmap covering 16 management actions.
+   - Selected-area details.
+   - Comparison bars for top-5% and top-15% opportunity extent.
+   - Percentage/hectare toggle and comparison download.
+
+2. Review progress:
+   - Annual control bars/trends.
+   - Priority-share lines.
+   - Cumulative revegetation and permanent-protection charts.
+   - Selected-year target-attainment dots and values table.
+   - Year/action controls and activity download.
+
+3. Sources and methods.
+
+The entire Review progress section uses 52 records transcribed from a Biodiversity 2037 PDF. We decided this is too aggregated for our intended geographic exploration.
+
+A separate Tableau workbook named Biodiversity_2037_Progress was generated locally. It contains:
+- T01_AnnualControl
+- T02_PriorityShare
+- T03_CumulativeRestoration
+- T04_TargetGap
+- Dashboard: ProgressOverview
+
+It opened and rendered locally, but remained an unfinished first version. Its four sheets all use the PDF-derived data. Do not treat it as a completed or published Tableau integration.
+
+## Agreed changes
+
+Retain the SMP4 Explore priorities functionality.
+
+Replace the entire PDF-dependent Review progress section with:
+“Explore landscape change.”
+
+Remove PDF activity figures and policy-target calculations from the core dashboard. The PDF may remain in historical documentation, but it should not drive the revised visuals.
+
+Rebuild the Tableau component around land-cover trends and comparisons. Choose the division between R and Tableau deliberately, ensuring Tableau contributes a meaningful interactive view.
+
+Update:
+- Topic and interface wording.
+- Navigation and controls.
+- Data preparation.
+- Visualisations and downloads.
+- Sources and methods.
+- Tests and documentation.
+- Design/rubric justification.
+
+Do not automatically preserve the old workbook/dashboard names if they no longer describe the content. Update the embedding configuration consistently.
+
+## Core data sources
+
+Use these two data products, comprising three inputs:
+
+### 1. SMP4 Summary Areas, layer 0
+
+https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer/0
+
+Our existing snapshot contains 1,053 areas.
+
+Important fields:
+- microID: area identifier and join key
+- Name: display label
+- Geometry: summary-area boundaries
+- Area and source geometry attributes
+
+These are model summary units, not LGAs.
+
+### 2. SMP4 Actions per Summary Area, table 1
+
+https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer/1
+
+Our existing snapshot contains 12,403 area-action records covering 16 actions.
+
+Fields:
+- OBJECTID
+- microID
+- Action
+- AREA_TOT
+- BE_RANK
+- BE_RANGE
+- CE_RANK
+- CE_RANGE
+- AREA_5
+- AREA_20
+
+Interpretation:
+- CE_RANK is the median relative cost-effectiveness rank.
+- It is not a probability, percentage improvement or dollar return.
+- CE_RANGE is a source range, not a confidence interval.
+- AREA_TOT is the relevant hectares for that action, not necessarily the whole polygon.
+- AREA_5 is hectares within the model’s top 5%.
+- AREA_20 is labelled “top 15%” in NatureKit despite its raw field name.
+- Top 5% is included within top 15%; do not stack or add them as separate areas.
+- Exclude BE_RANK/BE_RANGE from core comparisons because available source descriptions disagree about their aggregation.
+- Join using microID, not OBJECTID.
+- Missing area-action records remain missing, not zero.
+- Unit 925 has no action records in the existing snapshot.
+
+The existing SMP4 model snapshot is associated with the July 2023 release and was retrieved on 21 October 2026. Verify dates against the actual supplied files.
+
+### 3. Victorian Land Cover Time Series: VICLANDCOVERTS
+
+Catalogue:
+https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series
+
+DEECA explanation and access:
+https://www.environment.vic.gov.au/biodiversity/Victorias-Land-Cover-Time-Series
+
+Use classified GeoTIFF rasters for seven historical periods, with 19 land-cover classes at 25-metre resolution.
+
+The catalogue describes periods spanning approximately 1987–2019. Some service/document labels differ for the earliest period. Verify actual filenames, metadata and epoch labels before presenting dates.
+
+These are multi-year historical epochs, not annual observations or current land cover.
+
+DEECA also provides an Excel summary workbook for administrative/ecological regions. This is a possible fallback or validation source, but the preferred integration is to calculate statistics within SMP4 summary areas.
+
+The catalogue lists CC BY 4.0 for the land-cover dataset. Check downloaded resource metadata and attribution. Do not assume this establishes the same terms for SMP4.
+
+No species-observation or parks/reserves dataset is currently required.
+
+## Intended spatial integration
+
+Calculate land-cover statistics within each SMP4 summary area for every available epoch.
+
+Proposed output grain:
+one microID × epoch × land-cover class.
+
+Proposed fields:
+- microID
+- epoch_id
+- epoch_label
+- epoch_start
+- epoch_end
+- class_code
+- class_label
+- area_ha
+- share_pct
+- valid_area_ha
+- nodata_area_ha
+- source/version/provenance fields
+
+These are proposed output fields, not verified source attributes.
+
+Use original or repaired boundaries for analysis.
+The existing 100-metre simplified boundaries are for display only.
+
+Verify before processing:
+- Raster download availability and size.
+- CRS, resolution, grid origin, extent and alignment across epochs.
+- Class-code consistency and any class-definition changes.
+- NoData handling and denominator definitions.
+- Appropriate treatment of cells intersecting area boundaries.
+- Whether the source summary areas overlap.
+- Geometry repairs and their implications for analytical overlays.
+- Processing cost and reproducibility.
+
+Do not silently resample categorical rasters with bilinear interpolation.
+Do not calculate hectare areas directly from longitude/latitude coordinates.
+Keep missing coverage separate from genuine zero area.
+
+A transition table or heatmap requires comparing aligned raster cells between epochs. Net class totals cannot establish class-to-class transitions.
+
+Do not claim the raster workflow is already feasible or complete: only source availability and documentation were checked in the previous chat. The rasters have not yet been downloaded, inspected or processed for this redesign.
+
+## Proposed revised visuals
+
+Retain:
+- SMP4 action-priority map.
+- Area-action heatmap.
+- Selected-area rank and opportunity extent.
+- Pinned-area comparisons.
+
+Assess and implement an appropriate set of:
+- Land-cover map with epoch selection.
+- Land-cover composition through time for the selected area.
+- Class-specific change comparisons between selected areas.
+- Gains/losses between selected epochs.
+- Transition heatmap only if supported by properly aligned raster analysis.
+
+Avoid redundant charts. Make selection behaviour and denominators explicit.
+
+Prefer shared area selection across the priority and landscape views where technically justified. SMP4 is a later model snapshot than the land-cover history; do not suggest that its ranks were observed in every historical epoch.
+
+Land-cover classifications do not directly measure habitat quality, species abundance or management effectiveness. A change in mapped vegetation class must not automatically be labelled ecological degradation or recovery.
+
+## Existing files and portability
+
+On the original computer:
+- Shiny:
+  C:/Users/arnav/OneDrive/Desktop/Work/Info/A3/COMP90007
+- Feasibility package:
+  C:/Users/arnav/OneDrive/Desktop/Work/Info/A3/DEECA_Biodiversity_Feasibility
+- Generated Tableau workbook:
+  C:/Users/arnav/OneDrive/Desktop/Work/Info/A3/Biodiversity_2037_Tableau
+
+Repository previously supplied:
+https://github.com/Mrbruh79/COMP90007
+
+Do not assume the remote repository contains the latest local work. Inspect branches, commits and files before proceeding. Do not assume the attached handoff’s branch or commit exists on this computer.
+
+The original Shiny app directly reads:
+- data/smp_cache.rds
+- data/activity.csv
+
+The spatial cache contains boundaries, action attributes and provenance. It may be excluded from Git and may require regeneration.
+
+Relevant existing files include:
+- app.R
+- R/data.R
+- R/ui.R
+- R/server.R
+- scripts/prepare_data.R
+- www/atlas.css
+- www/atlas.js
+
+The feasibility package includes source manifests, downloaded service batches, prepared CSV/GeoJSON files and audits. Reuse them where appropriate after inspection.
+
+## Design direction
+
+Keep the environmental atlas character:
+- Warm paper background.
+- Dark green text.
+- Restrained green and ochre accents.
+- Clear typography and thin dividing rules.
+- Large useful maps.
+- Dense but readable comparisons.
+
+Avoid generic KPI-card grids, excessive rounded panels, gradients and decorative charts.
+
+## How to proceed
+
+1. Inspect the current project, specification, rubric and source documentation.
+2. Audit the actual land-cover resources before finalising the revised implementation.
+3. Report concrete download/processing feasibility and any limitations.
+4. Finalise the data model and chart responsibilities between R and Tableau.
+5. Implement the revised preparation pipeline and interface.
+6. Build and validate the real Tableau workbook.
+7. Test calculations, spatial outputs, selection behaviour, missing data, downloads and rendering.
+8. Update documentation with reproducible instructions and an honest completion record.
+
+Proceed with local development and validation. This request does not authorise public deployment, data uploads or Tableau publication. Prepare those steps for review if needed.

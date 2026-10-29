@@ -61,6 +61,7 @@ prepare_spatial <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   stamp <- format(Sys.time(),'%Y%m%dT%H%M%S',tz='UTC')
   if(file.exists(cache)) file.copy(cache,paste0('data/downloads/smp_cache-',stamp,'.rds'),overwrite=FALSE)
   saveRDS(original,'data/downloads/smp_original.rds')
+  saveRDS(original,'data/smp_original.rds')
   snapshot <- list(areas=areas,actions=actions,retrieved=as.character(Sys.Date()),source=base,
     retrieved_utc=format(Sys.time(),'%Y-%m-%dT%H:%M:%SZ',tz='UTC'),geometry_audit=audit)
   # The old cache remains usable if downloading or validation fails before this point.

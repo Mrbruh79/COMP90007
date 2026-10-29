@@ -33,6 +33,7 @@ atlas_server <- function(d) function(input, output, session) {
     leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12,zoomSnap=.25)) |>
       leaflet::fitBounds(140.9,-39.2,150.05,-33.95) |>
       leaflet::addProviderTiles('CartoDB.Positron',group='context',options=leaflet::providerTileOptions(opacity=.5)) |>
+      leaflet::hideGroup('context') |>
       leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
         color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,'/ Foxes /',s$formatted),
         highlightOptions=leaflet::highlightOptions(color='#203c32',weight=2,bringToFront=TRUE)) |>
@@ -145,89 +146,5 @@ atlas_server <- function(d) function(input, output, session) {
     x$record_status <- ifelse(is.na(x$CE_RANK),'No action record','Available')
     write.csv(x,file,row.names=FALSE,na='')
   })
-  output$download_activity <- downloadHandler(filename='biodiversity2037-activity.csv',content=function(file) write.csv(d$activity,file,row.names=FALSE,na=''))
-  output$target_gap <- renderPlot({
-    req(input$year);x <- annual_progress(d,input$year)
-    ggplot2::ggplot(x,ggplot2::aes(x=attainment,y=reorder(action,attainment))) +
-      ggplot2::geom_vline(xintercept=100,linetype='dashed',colour='#9a7142') +
-      ggplot2::geom_segment(ggplot2::aes(xend=100,yend=action),colour='#bcc5bc',linewidth=1) +
-      ggplot2::geom_point(size=4,colour='#285f47') +
-      ggplot2::geom_text(ggplot2::aes(label=paste0(round(attainment,1),'%')),nudge_y=.2,size=3.6,colour=ink) +
-      ggplot2::scale_x_continuous(limits=c(0,max(110,annual_progress(d)$attainment+10)),breaks=c(0,25,50,75,100)) +
-      ggplot2::labs(x=paste('Annual target attained (%)  / ',input$year),y=NULL) + chart_theme()
-  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
-  output$target_table <- renderUI({
-    req(input$year);x <- annual_progress(d,input$year)
-    tags$table(class='evidence-table',tags$caption('Selected-year values'),
-      tags$thead(tags$tr(tags$th('Action'),tags$th('Reported ha'),tags$th('Target ha'),tags$th('Gap'))),
-      tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(tags$td(x$action[i]),tags$td(number(x$area_ha[i])),tags$td(number(x$target_ha[i])),
-        tags$td(paste(number(abs(x$gap_pp[i]),1),'pp',if(x$gap_pp[i]>=0)'below' else 'above'))))))
-  })
-  filtered_annual <- reactive({x<-annual_progress(d);if(!is.null(input$trend_action)&&input$trend_action!='All actions') x<-x[x$action==input$trend_action,];x})
-  output$annual_trends <- renderPlot({
-    x <- filtered_annual()
-    ggplot2::ggplot(x,ggplot2::aes(period_end_year,area_ha/1e6))+
-      ggplot2::geom_hline(ggplot2::aes(yintercept=target_ha/1e6),linetype='dashed',colour='#a17d4b')+
-      ggplot2::geom_line(colour='#285f47',linewidth=.8)+ggplot2::geom_point(colour='#285f47',size=2)+
-      ggplot2::facet_wrap(~action,ncol=1,scales='free_y')+
-      ggplot2::scale_x_continuous(breaks=2019:2022,labels=c('2018-19','2019-20','2020-21','2021-22'))+
-      ggplot2::scale_y_continuous(limits=c(0,NA))+
-      ggplot2::labs(x=NULL,y='Million hectares')+chart_theme()
-  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
-  output$priority_share <- renderPlot({
-    x <- filtered_annual();totals<-d$activity[d$activity$coverage=='statewide',]
-    x$total<-totals$area_ha[match(paste(x$action,x$financial_year),paste(totals$action,totals$financial_year))]
-    ggplot2::ggplot(x,ggplot2::aes(period_end_year,100*area_ha/total,colour=action))+
-      ggplot2::geom_line(linewidth=.9)+ggplot2::geom_point(size=2)+
-      ggplot2::scale_color_manual(values=c('Pest herbivore control'='#285f47','Pest predator control'='#816499','Weed control'='#b47737'))+
-      ggplot2::scale_x_continuous(breaks=2019:2022,labels=c('2018-19','2019-20','2020-21','2021-22'))+
-      ggplot2::scale_y_continuous(limits=c(0,100))+
-      ggplot2::labs(x=NULL,y='Priority-location share (%)',colour=NULL)+chart_theme()+ggplot2::theme(legend.text=ggplot2::element_text(size=10))
-  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
-  output$cumulative <- renderPlot({
-    x<-d$activity[(d$activity$action=='Revegetation' & d$activity$coverage=='priority') | d$activity$action=='Permanent protection',]
-    ggplot2::ggplot(x,ggplot2::aes(period_end_year,area_ha))+
-      ggplot2::geom_line(colour='#285f47',linewidth=.8)+ggplot2::geom_point(colour='#285f47',size=2)+
-      ggplot2::facet_wrap(~action,ncol=2)+
-      ggplot2::scale_y_continuous(limits=c(0,NA),labels=function(x) format(x,big.mark=',',scientific=FALSE))+
-      ggplot2::scale_x_continuous(breaks=c(2019,2022),labels=c('2018-19','2021-22'),expand=ggplot2::expansion(mult=c(.2,.2)))+
-      ggplot2::labs(x=NULL,y='Cumulative hectares',caption='2037 target: 200,000 ha per measure (beyond the displayed scale)')+chart_theme()
-  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
-  output$activity_table <- renderUI({
-    x <- d$activity
-    tags$table(class='evidence-table',tags$caption('All reported activity records. Statewide already includes priority and other locations.'),
-      tags$thead(tags$tr(lapply(c('Measure','Year','Coverage','Basis','Reported ha','Target ha','Source page'),tags$th))),
-      tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(lapply(c(x$action[i],x$financial_year[i],x$coverage[i],
-        x$basis[i],number(x$area_ha[i]),if(is.na(x$target_ha[i])) 'Not applicable' else number(x$target_ha[i]),x$source_pdf_page[i]),tags$td)))))
-  })
-  output$download_tableau <- downloadHandler(
-    filename=function() 'Biodiversity_2037_Progress.twbx',
-    content=function(file) file.copy('tableau/Biodiversity_2037_Progress.twbx',file),
-    contentType='application/octet-stream')
-  output$tableau <- renderUI({
-    config <- tableau_config()
-    if(config$valid) div(id='tableau-host',`data-view-url`=config$url,
-      `data-release`=d$activity_release,
-      div(id='tableau-status',role='status',`aria-live`='polite','Loading the published Tableau dashboard…'),
-      tags$button(type='button',id='tableau-retry',class='button-outline','Retry Tableau'),
-      tags$a(href=config$url,target='_blank',rel='noopener','Open in Tableau Public'),
-      div(id='tableau-mount'),
-      p(class='caption','Map selections never filter these statewide figures. The local evidence below remains available if Tableau is unavailable.'))
-    else div(class='empty-state',role='status',
-      h3(if(config$configured) 'Check the Tableau view address' else 'Explore the Tableau workbook'),
-      p(if(config$configured) 'Use the HTTPS Tableau Public /views/Workbook/ProgressOverview address in config/app.json.'
-        else 'The charts below work locally. Download the companion workbook to explore the same measures in Tableau Desktop.'),
-      downloadButton('download_tableau','Download Tableau workbook'))
-  })
-  observe({
-    req(input$year,input$trend_action)
-    session$sendCustomMessage('progress-state',list(year=input$year,action=input$trend_action))
-  })
-  observeEvent(input$tableau_parameter,{
-    p <- input$tableau_parameter
-    if(identical(p$name,'Selected year') && p$value %in% d$activity$financial_year)
-      updateSelectInput(session,'year',selected=p$value)
-    if(identical(p$name,'Selected action') && p$value %in% c('All actions',unique(annual_progress(d)$action)))
-      updateSelectInput(session,'trend_action',selected=p$value)
-  })
+  landscape_server(d,input,output,session,selected,pins,shown_ids,notice)
 }

@@ -18,8 +18,8 @@ load_atlas <- function() {
   requireNamespace('sf', quietly=TRUE)
   d <- readRDS('data/smp_cache.rds')
   d$areas <- d$areas[order(as.integer(sub('unit','',d$areas$microID))),]
-  d$activity <- read.csv('data/activity.csv',stringsAsFactors=FALSE)
-  d$activity_release <- paste0('B2037-2018-2022-',substr(unname(tools::md5sum('data/activity.csv')),1,12))
+  d$landcover <- load_landcover()
+  if(!is.null(d$landcover)) stopifnot(identical(d$landcover$manifest$spatial_cache_md5,unname(tools::md5sum('data/smp_cache.rds'))))
   d$actions$share5 <- 100*d$actions$AREA_5/d$actions$AREA_TOT
   d$actions$share15 <- 100*d$actions$AREA_20/d$actions$AREA_TOT
   d$release_id <- paste0('SMP4-',d$retrieved,'-',substr(unname(tools::md5sum('data/smp_cache.rds')),1,12))
@@ -47,16 +47,10 @@ tableau_config <- function(path='config/app.json') {
   config <- if(file.exists(path)) jsonlite::fromJSON(path) else list()
   url <- trimws(Sys.getenv('TABLEAU_VIEW_URL',if(is.null(config$tableau_view_url)) '' else config$tableau_view_url))
   valid <- grepl('^https://public[.]tableau[.]com/views/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+/?([?][^#[:space:]]*)?$',url)
+  valid <- valid && grepl('/LandscapeChange/?([?].*)?$',url)
   list(url=if(valid) sub('[?].*$','',url) else '',configured=nzchar(url),valid=valid)
 }
 action_row <- function(d,id,action) d$actions[d$actions$microID==id & d$actions$Action==action,,drop=FALSE]
-annual_progress <- function(d,year=NULL) {
-  x <- d$activity[d$activity$basis=='annual' & d$activity$coverage=='priority',]
-  if (!is.null(year)) x <- x[x$financial_year==year,]
-  x$attainment <- 100*x$area_ha/x$target_ha
-  x$gap_pp <- 100-x$attainment
-  x
-}
 compare_rows <- function(d,ids,action) {
   x <- data.frame(microID=ids,stringsAsFactors=FALSE)
   merge(x,d$actions[d$actions$Action==action,],by='microID',all.x=TRUE,sort=FALSE)
@@ -73,21 +67,4 @@ cell_text_colour <- function(background) {
   linear <- ifelse(rgb<=.04045,rgb/12.92,((rgb+.055)/1.055)^2.4)
   luminance <- colSums(linear*c(.2126,.7152,.0722))
   ifelse((luminance+.05)/.05 >= 1.05/(luminance+.05),'#000000','#ffffff')
-}
-progress_dataset <- function(d) {
-  x <- d$activity
-  annual <- x[x$basis=='annual' & x$coverage=='priority',]
-  cumulative <- x[x$basis=='cumulative_since_2017' &
-    ((x$action=='Revegetation' & x$coverage=='priority') | x$action=='Permanent protection'),]
-  result <- rbind(annual,cumulative)
-  totals <- x[x$coverage=='statewide',]
-  key <- function(z) paste(z$action,z$financial_year)
-  result$statewide_ha <- totals$area_ha[match(key(result),key(totals))]
-  result$priority_share_pct <- ifelse(result$basis=='annual',100*result$area_ha/result$statewide_ha,NA_real_)
-  result$attainment_pct <- 100*result$area_ha/result$target_ha
-  result$gap_pp <- 100-result$attainment_pct
-  result$shortfall_ha <- pmax(0,result$target_ha-result$area_ha)
-  result$above_target_ha <- pmax(0,result$area_ha-result$target_ha)
-  result$data_release <- d$activity_release
-  result[order(result$action,result$period_end_year),]
 }

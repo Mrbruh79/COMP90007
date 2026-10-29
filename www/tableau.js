@@ -1,6 +1,7 @@
 /* Tableau Public Embedding API v3. Local evidence never depends on this module. */
 (function (root) {
-  class ProgressBridge {
+  const PARAMETERS = {focus:'Focus area',compare1:'Compare area 1',compare2:'Compare area 2',compare3:'Compare area 3',class:'Land-cover class',start:'Start epoch',end:'End epoch'};
+  class LandscapeBridge {
     constructor(client, report) {
       this.client = client; this.report = report; this.desired = null;
       this.applied = {}; this.busy = false; this.ready = false; this.closed = false;
@@ -9,7 +10,7 @@
       const parameters = await this.client.getParametersAsync();
       const found = Object.fromEntries(parameters.map(p => [p.name, p.currentValue.value]));
       if (found['Data release'] !== release) throw new Error('The published workbook uses a different data release.');
-      for (const name of ['Selected year', 'Selected action']) {
+      for (const name of Object.values(PARAMETERS)) {
         if (!(name in found)) throw new Error('The published workbook is missing its selection controls.');
         this.applied[name] = found[name];
       }
@@ -24,24 +25,25 @@
       try {
         while (!this.closed && this.desired) {
           const next = {...this.desired};
-          for (const [name, value] of [['Selected year', next.year], ['Selected action', next.action]]) {
+          for (const [key, name] of Object.entries(PARAMETERS)) {
+            const value = next[key];
             if (this.closed) return;
-            if (value && this.applied[name] !== value) {
+            if (value !== undefined && this.applied[name] !== value) {
               await this.client.changeParameterValueAsync(name, value);
               this.applied[name] = value;
             }
           }
-          if (next.year === this.desired.year && next.action === this.desired.action) break;
+          if (Object.keys(PARAMETERS).every(key => next[key] === this.desired[key])) break;
         }
-        if (!this.closed) this.report('ready', 'Tableau is connected. Year and action controls are synchronised.');
+        if (!this.closed) this.report('ready', 'Tableau is connected. Area, class and epoch controls are synchronised.');
       } catch (error) {
         if (!this.closed) this.report('error', 'Tableau could not apply your selection. Retry, or use the local evidence.');
       } finally { this.busy = false; }
     }
     close() { this.closed = true; this.ready = false; }
   }
-  if (typeof module !== 'undefined' && module.exports) { module.exports = {ProgressBridge}; return; }
-  let current = null, desired = {year:'2021-22', action:'All actions'}, library = null;
+  if (typeof module !== 'undefined' && module.exports) { module.exports = {LandscapeBridge, PARAMETERS}; return; }
+  let current = null, desired = {}, library = null;
   function status(host, state, message) {
     if (!host.isConnected) return;
     host.dataset.state = state;
@@ -63,13 +65,13 @@
       const {TableauViz,TableauEventType} = await library;
       if (current !== ticket || !host.isConnected) return;
       const viz = new TableauViz();
-      viz.id = 'progress-viz'; viz.src = host.dataset.viewUrl; viz.toolbar = 'bottom';
-      viz.hideTabs = true; viz.width = '100%'; viz.height = '1100px';
+      viz.id = 'landscape-viz'; viz.src = host.dataset.viewUrl; viz.toolbar = 'bottom';
+      viz.hideTabs = true; viz.width = '100%'; viz.height = '1250px';
       viz.addEventListener(TableauEventType.FirstInteractive,async () => {
         if (current !== ticket) return;
         clearTimeout(ticket.timer);
         try {
-          ticket.bridge = new ProgressBridge(viz.workbook,(state,message)=>status(host,state,message));
+          ticket.bridge = new LandscapeBridge(viz.workbook,(state,message)=>status(host,state,message));
           ticket.bridge.desired = {...desired};
           await ticket.bridge.connect(host.dataset.release);
         } catch(error) { status(host,'error',error.message + ' Use the local evidence below.'); }
@@ -82,13 +84,14 @@
         if (current !== ticket || !ticket.bridge?.ready || ticket.bridge.busy) return;
         try {
           const p = await event.detail.getParameterAsync();
-          if (!['Selected year','Selected action'].includes(p.name)) return;
+          const key = Object.keys(PARAMETERS).find(key => PARAMETERS[key] === p.name);
+          if (!key) return;
           const value = p.currentValue.value;
           ticket.bridge.applied[p.name] = value;
-          desired[p.name === 'Selected year' ? 'year' : 'action'] = value;
+          desired[key] = value;
           ticket.bridge.desired = {...desired};
           if (window.Shiny) Shiny.setInputValue('tableau_parameter',{name:p.name,value},{priority:'event'});
-        } catch(error) { status(host,'error','Tableau selection could not be read. Use the year and action controls above.'); }
+        } catch(error) { status(host,'error','Tableau selection could not be read. Use the area, class and epoch controls above.'); }
       });
       host.querySelector('#tableau-mount').append(viz);
     } catch(error) {
@@ -104,7 +107,7 @@
   function register() {
     if (!window.Shiny || register.done) return;
     register.done = true;
-    Shiny.addCustomMessageHandler('progress-state',state => {
+    Shiny.addCustomMessageHandler('landscape-state',state => {
       desired = state; current?.bridge?.update(state);
     });
   }

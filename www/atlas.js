@@ -1,8 +1,8 @@
 let mapWidth = 0;
 function resizeAtlasMap() {
-  const el = document.getElementById('priority_map');
+  const el = ['priority_map','landcover_map'].map(id=>document.getElementById(id)).find(el=>el && el.offsetWidth);
   if (!el || !el.offsetWidth || !window.HTMLWidgets) return;
-  const widget = HTMLWidgets.find('#priority_map');
+  const widget = HTMLWidgets.find('#'+el.id);
   if (!widget || !widget.getMap) return;
   const map = widget.getMap();
   map.invalidateSize({pan:false});

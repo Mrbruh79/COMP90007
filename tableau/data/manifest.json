@@ -1,10 +1,11 @@
 {
-  "release": "B2037-2018-2022-2c4ed2b3d8b9",
-  "source_md5": "2c4ed2b3d8b9b9ad47c173a9a7e09aaf",
-  "chart_input_md5": "38053ef5c6f03b70907cf17b4b52d0d1",
-  "source_rows": 52,
-  "chart_rows": 20,
-  "source_url": "https://www.environment.vic.gov.au/__data/assets/pdf_file/0025/722563/Bio2037-Progress-update-2020-2022-final.pdf",
-  "printed_pages": [5, 7, 11, 15, 19],
-  "transformations": ["Annual: priority coverage only", "Cumulative: priority revegetation and statewide permanent protection", "Priority share: matching priority hectares / statewide hectares", "Attainment: scope-matched reported hectares / target hectares; percentage-point gap = 100 - attainment"]
+  "release": "VLCTS2020-027b466b6417-999c1a16",
+  "chart_rows": 140049,
+  "chart_input_md5": "5f7e65cda59a0c9337644977a6cae2f4",
+  "source_summary_md5": "dd757b79037907736b5d12297e2cea75",
+  "dashboard": "LandscapeChange",
+  "grain": "microID x historical epoch x classified land-cover class",
+  "no_statewide_sums": true,
+  "attribution": "State of Victoria (Department of Energy, Environment and Climate Action)",
+  "licence": "CC BY 4.0"
 }

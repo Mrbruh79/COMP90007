@@ -5,3 +5,6 @@
 "ggplot2","4.0.3"
 "jsonlite","2.0.0"
 "htmltools","0.5.9"
+"terra","1.9.46"
+"exactextractr","0.10.1"
+"foreign","0.8.91"

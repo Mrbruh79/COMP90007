@@ -18,3 +18,15 @@
 .evidence-scroll{overflow:auto;max-height:480px}.evidence-scroll th{position:sticky;top:0;background:var(--paper)}
 #local-evidence details{margin-top:20px}.progress-grid .shiny-plot-output{max-width:100%}
 @media(max-width:850px){#map_caption{max-width:100%}}
+
+/* Landscape workspace: map first, then evidence in thin ruled sections. */
+.landscape-intro{max-width:950px;margin:28px 0 20px}.landscape-intro h2{font-size:34px}
+.landscape-controls{display:grid;grid-template-columns:1fr 1.7fr 1fr 1fr;gap:24px;border-top:1px solid var(--rule);padding:20px 0 0}
+.landscape-workspace{margin-top:10px}.land-gradient{height:10px;margin-top:8px;background:linear-gradient(to right,#edf2df,#285f47)}
+.land-gradient.diverging{background:linear-gradient(to right,#9a613b,#f7f6f1,#285f47)}.land-share{font-family:Georgia,serif;font-size:27px}.land-share span{font:14px Arial,sans-serif}
+.land-comparison-section,.land-change-section{border-top:1px solid var(--ink);margin-top:25px;padding-top:20px}.land-comparison-section{overflow-x:auto}
+.land-comparison-section .evidence-table{min-width:720px}.land-comparison-section .evidence-table td:nth-child(2),.evidence-scroll td:nth-child(2){text-align:left}
+#landscape-viz{display:block;width:100%;min-height:850px}.landscape-controls .form-group{min-width:0}.landscape-workspace .detail-rail h3{font-size:15px;text-transform:none;letter-spacing:0}
+@media(max-width:1000px){.landscape-controls{grid-template-columns:1fr 1fr}.landscape-workspace{grid-template-columns:180px minmax(300px,1fr)}.landscape-workspace .detail-rail{grid-column:1/-1;border:0;border-top:1px solid var(--rule);padding:20px 0}}
+@media(max-width:600px){.landscape-controls{grid-template-columns:1fr}.landscape-workspace{display:block}.land-change-section .section-heading{display:block}}
+.landscape-controls>.shiny-input-container{width:100%;min-width:0}.landscape-controls .selectize-control{width:100%}

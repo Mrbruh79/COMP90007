@@ -1,0 +1,180 @@
+Objective
+To develop a rich, engaging, innovative, interactive interface designed for a specific audience and purpose;
+To build on the techniques and principles learned during the subject and previous assessments, and extend yourselves further;
+To work together as a team to create a single cohesive information visualisation product.
+To gain practice pitching your implemented product to a client by creating a professional video.
+Learning outcomes
+ILO 1. Apply the cognitive and technical principles of information visualisation across various domains
+ILO 2. Critically evaluate the designs of maps and user interfaces for spatial information visualisation
+ILO 3. Develop various types of visualisation platforms in order to analyse big data sets
+Your task
+This is a group assignment.
+
+Your group has been hired by [your client] to develop an R Shiny-based interactive visualisation interface that will be tailored to [your user group].
+
+You will select one of the following options:
+
+Option 1: Tourism
+
+Client   The City of Melbourne
+
+User group   Tourists who are planning to visit Melbourne or are currently visiting Melbourne
+
+Option 2: Government performance
+
+Client   One of the ten departments of the Victorian Government
+
+User group   Public servants or members of the general public interested in the performance of any State Government-related topic (transport, planning and building, health, education, ...)
+
+Option 3: Own choice (approval required)
+
+Client   The City of Melbourne or a Victorian Government department
+
+User group   If you would like to target a different user group, please discuss with the Senior Tutor, Alan Thomas, and get approval from him.
+
+Your interface must:
+
+Be intuitive and easy to use
+Be carefully designed for the needs of the target user group
+Help the users to discover interesting and practical information, identify interesting patterns in the data and/or make decisions for specific tasks (as appropriate for your chosen option)
+Be designed with reference to the principles of data graphics, cartography, and human-computer interaction covered in lectures
+Beyond the requirements on this page, you have a large amount of freedom to design the interface in any manner you choose. You are expected to make full use of the fact that you are working in a team of four students.
+
+In addition to the interface itself, you will prepare a design summary, a pattern or use-case summary and a video pitch to the client.
+
+How to get started
+The process of working on Assignment 3 will include the following steps:
+
+Review the Assignment 3 briefing in Lab 8
+Selection of the user group and purpose of your interface
+Data selection and formatting
+Some descriptive statistics and data analyses (initially to develop your own understanding of the data)
+Designing the interface with the information hierarchy in mind
+Developing the interface and iteratively redesigning it as you go
+A final testing phase.
+The key questions to ask include (but are not limited to):
+
+Where and when will individual users use the interactive visualisation?
+What patterns can be found? How can you help the user to discover patterns?
+Are there any anomalies or specifics of any particular location/type of data?
+What device is the user group most likely to use (computer, phone, tablet, kiosk, etc.)? You can focus on a single device type – you do not need to design a responsive interface.
+Selecting data
+Potential sources of data for your interface include:
+
+City of Melbourne Open Data Portal 
+Example dataset: Landmarks and places of interest
+Victorian Government open data
+Example dataset: Open space
+Government Department websites
+Example dataset: Rental Report
+A good data source directory can be found at the University of Melbourne Library: Australian GIS data guide
+You are encouraged to start with exploring and analysing datasets in Tableau, Excel, or (in the case of geospatial data) GIS software such as QGIS. You will then have a choice to export your chosen datasets into other formats if required. These types of files can then be used in the finished interface. 
+
+Technical requirements
+You are required to create an R Shiny interface that incorporates one or more Tableau visualisations using the techniques presented on page 8.5. 
+
+As long as you meet these requirements, you may use any R packages or coding techniques.
+
+(As with Assignment 2, you may use any R packages you wish, but the install.packages command must not be included in your script.)
+
+Tableau resources
+Week 8 pre-lab videos on integrating Shiny and Tableau
+Publish to Tableau Public
+Note: This makes your work publicly visible and searchable. Do not submit private or copyrighted datasets to Tableau Public.
+Actions in Tableau
+Tableau Embedding API v3
+When embedding Tableau into Shiny, you can incorporate small pieces of JavaScript code into your R Shiny code using the runjs function. For example, you can make Tableau update a filter when a user clicks something on a Leaflet map in Shiny.
+Tableau Embedding API v3 Tutorial
+R and Shiny resources
+Training materials listed in Weeks 4-7
+R and Shiny resources listed on page 6.6.5
+R Graphics Cookbook
+ggplot2 cheat sheets | ggplot2 workshop video | ggplot2-book
+ggiraph-book
+Learn Shiny
+Leaflet Tutorials | R leaflet package
+Web programming resources
+Advanced students may wish to include web programming in their Shiny app.
+HTML for custom content: Using HTML in Shiny | HTML with W3Schools
+CSS for custom styling: Using CSS in Shiny | CSS with W3Schools
+JavaScript for custom interactivity: JavaScript with W3Schools | tutorial< | guide
+Web programming cheat sheets:
+HTML: This cheat sheet includes a list of every HTML tag, in alphabetical order.
+CSS: There are many CSS properties, and it's easy to forget the specific name for one particular visual modification you want to make. This cheat sheet lists all of them.
+JavaScript: This cheat sheet provides an overview of many basic aspects of JavaScript. 
+Visualisation resources
+Non-spatial visualisations
+Tableau’s many built-in visualisations (Lab 2)
+R ggplot2 and ggiraph (Labs 4 to 6)
+30 R Packages For Data Visualization That You May Not Know Of
+Research other available R packages
+Invent your own visualisation type! Draw a static visualisation using R graphics or (for advanced coders) make an interactive graphic using d3.js and the r2d3 R package
+Geovisualisation
+Tableau maps (Lab 3)
+R leaflet (Lab 7)
+Make your own custom basemaps using Mapbox Studio and add them to leaflet using the mapboxapi R package
+Submission
+This exercise is a group-based assignment.
+
+The assessment is worth 35% of your final subject mark.
+
+You will submit the following three parts through Canvas:
+
+The implementation of, and a report on, your developed interface – 25% of your final subject mark
+A recorded video pitch, including a demonstration of the developed tool – 10% of your final subject mark
+A peer contribution evaluation, which must be completed by all group members after submission – this part does not carry a separate mark but may affect your marks for parts (A) and (B).
+Part A. Implementation and Report
+One group member must submit two files to this assignment by the stated deadline:
+
+A single zipped file containing your interface, any required data, and any other files that are needed to run the interface. 
+A PDF report, submitted simultaneously into Canvas (not inside your zipped file), that contains three sections as follows:
+I. a design summary (maximum 2 pages) explaining:
+
+(briefly) what problems your interface solves for your target user group
+how your interface is designed so that it supports this
+what features of the design you would like to receive credit for
+justification of the design decisions made while developing these features, with links to concepts from lectures
+e.g. why a particular colour scheme is used, or why a particular chart type is the best visualisation of the underlying data
+II. a pattern and/or use case summary (maximum 1.5 pages) showcasing:
+
+some of the interesting or useful information, insights or patterns in the data that the interface helps your target user group discover, and
+a short rationale as to why your tool helped in those discoveries, and how you embedded concepts from lectures into your design to enable these use cases to occur.
+Tip: you may choose to invent various personas based on the target user group and present use cases for each persona.
+III. any sources or references used.
+
+Part B. Video
+See Assignment 3: Group Project (Video).
+
+Part C. Peer Contribution Evaluation
+After the submission of Parts A and B is complete, you will evaluate the contributions of your group members to Assignment 3 using the FeedbackFruits platform.
+
+You should ensure that you assess and rate the contributions of your group members fairly and accurately. Unfair or inaccurate evaluations may affect your own mark for the assignment.
+
+Deadline
+The submission deadline for Parts A and B is Tuesday 3 November 2026 at 23:59.
+Part C, the peer evaluation, will be available from Wednesday 4 November to Friday 6 November 2026 at 23:59.
+Important: The three-day "short extension" process does not apply for group assignments. Applications for assessment adjustments should be submitted via the Special Consideration process.
+Assessments submitted after the original due date without an extension, or after the new due date if an extension has been granted by the Subject Coordinator, will be subject to a penalty of 10% in the mark received in this assessment for each day (or part day) the assessment task is late. For example, if you are late by one day and your assessment reaches a standard of 80 out of 100, you will now receive 70 in this assessment only.
+Assessment criteria
+Part A. Implementation and Report
+The key assessment criteria for Part A are outlined in the Rubric at the bottom of this page.
+
+As a guide to overall grade-related criteria: 
+
+<50%: Inadequate work that fails to meet basic technical standards or apply basic design principles in one or more respects.
+50-60%: Satisfactory work that is a correctly submitted basic interface to the data.
+60-70%: Good work that involves marginal additional technical challenge or marginal design innovation, and moderate levels of design quality. 
+70-80%: Excellent work that involves clear additional technical challenges, additional design innovation and high levels of design quality. 
+>80%: Outstanding work that demonstrates substantial additional technical challenge, substantial design innovation, flawless design, and involves work that clearly goes beyond that normally expected in class.  
+Part B. Video
+See Assignment 3: Group Project (Video).
+
+Hints
+Plan to submit on time.
+Try to be creative and innovative.
+Seek a consistent look throughout the entire interface. Make sure it does not look like the work of four separate people.
+Note that your report will be assessed based on its design. You should take care to ensure the report is carefully presented with attention to detail. For example, you may choose to incorporate an annotated diagram of your interface.
+Spelling and grammar are part of the assessment as well. Your video, visual aid, code commenting, and associated documentation should exhibit attention to detail, and should be free of errors.
+Complete the peer contribution evaluation on time and make sure to rate the contributions of your group members fairly and accurately.
+Technical issues:
+If your Tableau dashboard appears in the wrong size inside your Shiny interface, or if filters or other controls appear in unexpected positions, you may need to remove the "phone" layout in Tableau (top-left corner of dashboard editor interface, above the size control).

@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<workbook original-version="18.1" source-build="2026.2.1 (20262.26.0708.1337)" source-platform="mac" version="18.1">
+  <document-format-change-manifest>
+    <AccessibleZoneTabOrder />
+    <AnimationOnByDefault />
+    <AutoCreateAndUpdateDSDPhoneLayouts />
+    <MarkAnimation />
+    <ObjectModelEncapsulateLegacy />
+    <ObjectModelTableType />
+    <SchemaViewerObjectModel />
+    <SetMembershipControl />
+    <SheetIdentifierTracking />
+    <WindowsPersistSimpleIdentifiers />
+    <_.fcp.WorkbookFingerprinting.true...WorkbookFingerprinting />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name="ui.encoding.shelf.height" value="24" />
+    <preference name="ui.shelf.height" value="26" />
+  </preferences>
+  <datasources>
+    <datasource name="Parameters" />
+    <datasource>
+      <connection>
+        <metadata-records>
+          <metadata-record class="capability">
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[source.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype="string" name="character-set">"UTF-8"</attribute>
+              <attribute datatype="string" name="collation">"en_GB"</attribute>
+              <attribute datatype="string" name="currency">"₹"</attribute>
+              <attribute datatype="string" name="field-delimiter">","</attribute>
+              <attribute datatype="string" name="header-row">"true"</attribute>
+              <attribute datatype="string" name="locale">"en_IN"</attribute>
+              <attribute datatype="string" name="single-char">""</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class="column">
+            <remote-name>action</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[action]</local-name>
+            <parent-name>[source.csv]</parent-name>
+            <remote-alias>action</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag="0" name="LEN_RGB" />
+            <object-id>[source.csv_93ADF74FA2A04A33928AE34B09BF559E]</object-id>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+    </datasource>
+  </datasources>
+  <windows>
+    <window class="worksheet" name="Template">
+      <cards>
+        <edge name="left">
+          <strip size="160">
+            <card type="pages" />
+            <card type="filters" />
+            <card type="marks" />
+          </strip>
+        </edge>
+        <edge name="top">
+          <strip size="2147483647">
+            <card type="columns" />
+          </strip>
+          <strip size="2147483647">
+            <card type="rows" />
+          </strip>
+          <strip size="31">
+            <card type="title" />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid="{62DD1BED-14D2-4FAB-9180-5DB29A9A71A9}" />
+    </window>
+  </windows>
+</workbook>
