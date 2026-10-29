@@ -29,54 +29,67 @@ atlas_server <- function(d) function(input, output, session) {
   })
   observeEvent(input$focus_area,{if(input$focus_area %in% d$areas$microID) updateSelectizeInput(session,'area',selected=input$focus_area)})
   output$priority_map <- leaflet::renderLeaflet({
-    rows <- d$actions[d$actions$Action=='Control Foxes',]
-    values <- rows$CE_RANK[match(d$areas$microID,rows$microID)]
-    labels <- paste(d$areas$Name,'/ Foxes /',ifelse(is.na(values),'No action record',paste('Rank',values)))
-    leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=11,zoomSnap=.25)) |>
+    s <- map_spec(d,'Control Foxes')
+    leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12,zoomSnap=.25)) |>
       leaflet::fitBounds(140.9,-39.2,150.05,-33.95) |>
-      leaflet::addPolygons(layerId=~microID,group='areas',fillColor=rank_colour(values),fillOpacity=.95,
-        color='#f7f6f1',weight=.2,opacity=.4,label=labels,
+      leaflet::addProviderTiles('CartoDB.Positron',group='context',options=leaflet::providerTileOptions(opacity=.5)) |>
+      leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
+        color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,'/ Foxes /',s$formatted),
         highlightOptions=leaflet::highlightOptions(color='#203c32',weight=2,bringToFront=TRUE)) |>
-      leaflet::addPolygons(data=d$areas[d$areas$microID=='unit668',],group='selection',fill=FALSE,color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE)) |>
-      leaflet::addControl(rank_legend(),position='topright',className='rank-legend') |>
+      leaflet::addControl(map_legend(s),position='topright',className='rank-legend') |>
       leaflet::addScaleBar(position='bottomleft',options=leaflet::scaleBarOptions(imperial=FALSE)) |>
-      leaflet::addControl('DEECA  /  SMP4',position='bottomright',className='source-control')
+      leaflet::addControl('DEECA / SMP4',position='bottomright',className='source-control')
   })
-  observeEvent(input$action,{
-    a <- chosen_action(); rows <- d$actions[d$actions$Action==a,]
-    m <- match(d$areas$microID,rows$microID);v <- rows$CE_RANK[m]
-    labels <- paste0(d$areas$Name,'  /  ',action_labels[[a]],'  /  ',ifelse(is.na(v),'No action record',paste('Rank',v)))
+  observeEvent(list(input$action,input$map_metric),{
+    a <- chosen_action();s <- map_spec(d,a,input$map_metric %||% 'rank')
     leaflet::leafletProxy('priority_map',data=d$areas) |>
       leaflet::clearGroup('areas') |>
-      leaflet::addPolygons(layerId=~microID,group='areas',fillColor=rank_colour(v),fillOpacity=.95,
-        color='#f7f6f1',weight=.2,opacity=.4,label=labels,
+      leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
+        color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,action_labels[[a]],s$formatted,sep=' / '),
         highlightOptions=leaflet::highlightOptions(color='#203c32',weight=2,bringToFront=TRUE)) |>
       leaflet::clearControls() |>
-      leaflet::addControl(rank_legend(),position='topright',className='rank-legend') |>
+      leaflet::addControl(map_legend(s),position='topright',className='rank-legend') |>
       leaflet::addScaleBar(position='bottomleft',options=leaflet::scaleBarOptions(imperial=FALSE)) |>
-      leaflet::addControl('DEECA  /  SMP4',position='bottomright',className='source-control')
-    # Reapply outline after changing the polygon layer.
-    s <- d$areas[d$areas$microID==selected(),]
-    leaflet::leafletProxy('priority_map') |> leaflet::clearGroup('selection') |>
-      leaflet::addPolygons(data=s,group='selection',fill=FALSE,color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE))
+      leaflet::addControl('DEECA / SMP4',position='bottomright',className='source-control')
   },ignoreInit=TRUE)
-  observeEvent(input$area,{
-    s <- d$areas[d$areas$microID==selected(),]
-    leaflet::leafletProxy('priority_map') |> leaflet::clearGroup('selection') |>
-      leaflet::addPolygons(data=s,group='selection',fill=FALSE,color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE))
-  },ignoreInit=TRUE)
+  observe({
+    req(selected())
+    proxy <- leaflet::leafletProxy('priority_map') |> leaflet::clearGroup('selection')
+    pinned <- d$areas[d$areas$microID %in% pins(),]
+    if(nrow(pinned)) proxy <- proxy |> leaflet::addPolygons(data=pinned,group='selection',fill=FALSE,
+      color='#a56a2b',weight=2,dashArray='4 3',options=leaflet::pathOptions(interactive=FALSE))
+    proxy |> leaflet::addPolygons(data=d$areas[d$areas$microID==selected(),],group='selection',fill=FALSE,
+      color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE))
+    chosen_action();input$map_metric
+  })
+  observeEvent(input$map_context,{
+    proxy <- leaflet::leafletProxy('priority_map')
+    if(isTRUE(input$map_context)) proxy |> leaflet::showGroup('context') else proxy |> leaflet::hideGroup('context')
+  })
+  observeEvent(input$zoom_area,{
+    b <- sf::st_bbox(d$areas[d$areas$microID==selected(),])
+    leaflet::leafletProxy('priority_map') |> leaflet::fitBounds(b[['xmin']],b[['ymin']],b[['xmax']],b[['ymax']])
+  })
+  output$map_caption <- renderText({
+    s <- map_spec(d,chosen_action(),input$map_metric %||% 'rank')
+    if(s$unit=='ha') 'Darker = more top-ranked hectares. Hectare scale is specific to the selected action.'
+    else if(s$unit=='%') 'Darker = a larger top-ranked share of relevant action area. Fixed 0–100% scale.'
+    else 'Darker = greater relative cost-effectiveness. Fixed 0–100 rank scale.'
+  })
   observeEvent(input$priority_map_shape_click,{
     id <- input$priority_map_shape_click$id
     if (!is.null(id) && id %in% d$areas$microID) updateSelectizeInput(session,'area',selected=id)
   })
   observeEvent(input$reset,{
     updateSelectInput(session,'action',selected='Control Foxes');updateSelectizeInput(session,'area',selected='unit668')
+    updateSelectInput(session,'map_metric',selected='rank')
     leaflet::leafletProxy('priority_map') |> leaflet::fitBounds(140.9,-39.2,150.05,-33.95)
     notice('Map and action reset. Your pinned areas are retained.')
   })
   extent_bar <- function(label,value,total) {
     pct <- 100*value/total
-    div(class='extent-row',div(class='extent-label',span(label),strong(paste(number(value),'ha'))),
+    in_pct <- is.null(input$extent_unit)||input$extent_unit=='pct'
+    div(class='extent-row',div(class='extent-label',span(label),strong(if(in_pct) paste0(number(pct,1),'%') else paste(number(value),'ha'))),
       div(class='bar-track',`aria-label`=paste(label,number(pct,1),'percent of relevant area'),
         div(class='bar-fill',style=paste0('width:',pct,'%;'))),span(class='caption',paste0(number(pct,1),'% of relevant area')))
   }
@@ -99,10 +112,10 @@ atlas_server <- function(d) function(input, output, session) {
       tags$thead(tags$tr(tags$th(scope='col','Area'),lapply(acts,function(a) tags$th(scope='col',class=if(a==chosen_action()) 'active-action' else '',action_labels[[a]])))),
       tags$tbody(lapply(ids,function(id) tags$tr(tags$th(scope='row',unit_name(id)),lapply(acts,function(a) {
         r <- action_row(d,id,a);v <- if(nrow(r)) r$CE_RANK else NA_real_
-        label <- paste(unit_name(id),a,if(is.na(v)) 'No action record' else paste('rank',v),sep='; ')
+        label <- paste(unit_name(id),a,if(is.na(v)) 'No action record' else paste('rank',v,';',number(r$AREA_TOT),'relevant ha;',number(r$share15,1),'percent in top 15%'),sep='; ')
         tags$td(class=if(a==chosen_action()) 'active-action' else '',
           tags$button(type='button',class=paste('heat-cell',if(is.na(v)) 'missing' else ''),`data-area`=id,`data-action`=a,
-            style=paste0('background:',rank_colour(v),';color:',if(!is.na(v)&&v>=65)'#ffffff' else '#203c32'),
+            style=paste0('background:',rank_colour(v),';color:',cell_text_colour(rank_colour(v))),
             `aria-label`=label,title=label,if(is.na(v)) 'No record' else as.character(v)))
       }))))))
   })
@@ -128,7 +141,7 @@ atlas_server <- function(d) function(input, output, session) {
     ids <- unique(c(pins(),selected()))
     x <- expand.grid(microID=ids,Action=names(action_labels),stringsAsFactors=FALSE)
     x <- merge(x,d$actions,by=c('microID','Action'),all.x=TRUE)
-    x$model <- 'SMP4';x$retrieved <- d$retrieved;x$source <- d$source
+    x$model <- 'SMP4';x$retrieved <- d$retrieved;x$source <- d$source;x$release_id <- d$release_id
     x$record_status <- ifelse(is.na(x$CE_RANK),'No action record','Available')
     write.csv(x,file,row.names=FALSE,na='')
   })
@@ -140,9 +153,9 @@ atlas_server <- function(d) function(input, output, session) {
       ggplot2::geom_segment(ggplot2::aes(xend=100,yend=action),colour='#bcc5bc',linewidth=1) +
       ggplot2::geom_point(size=4,colour='#285f47') +
       ggplot2::geom_text(ggplot2::aes(label=paste0(round(attainment,1),'%')),nudge_y=.2,size=3.6,colour=ink) +
-      ggplot2::scale_x_continuous(limits=c(0,max(110,x$attainment+10)),breaks=c(0,25,50,75,100)) +
+      ggplot2::scale_x_continuous(limits=c(0,max(110,annual_progress(d)$attainment+10)),breaks=c(0,25,50,75,100)) +
       ggplot2::labs(x=paste('Annual target attained (%)  / ',input$year),y=NULL) + chart_theme()
-  },res=110)
+  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
   output$target_table <- renderUI({
     req(input$year);x <- annual_progress(d,input$year)
     tags$table(class='evidence-table',tags$caption('Selected-year values'),
@@ -160,7 +173,7 @@ atlas_server <- function(d) function(input, output, session) {
       ggplot2::scale_x_continuous(breaks=2019:2022,labels=c('2018-19','2019-20','2020-21','2021-22'))+
       ggplot2::scale_y_continuous(limits=c(0,NA))+
       ggplot2::labs(x=NULL,y='Million hectares')+chart_theme()
-  },res=110)
+  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
   output$priority_share <- renderPlot({
     x <- filtered_annual();totals<-d$activity[d$activity$coverage=='statewide',]
     x$total<-totals$area_ha[match(paste(x$action,x$financial_year),paste(totals$action,totals$financial_year))]
@@ -170,7 +183,7 @@ atlas_server <- function(d) function(input, output, session) {
       ggplot2::scale_x_continuous(breaks=2019:2022,labels=c('2018-19','2019-20','2020-21','2021-22'))+
       ggplot2::scale_y_continuous(limits=c(0,100))+
       ggplot2::labs(x=NULL,y='Priority-location share (%)',colour=NULL)+chart_theme()+ggplot2::theme(legend.text=ggplot2::element_text(size=10))
-  },res=110)
+  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
   output$cumulative <- renderPlot({
     x<-d$activity[(d$activity$action=='Revegetation' & d$activity$coverage=='priority') | d$activity$action=='Permanent protection',]
     ggplot2::ggplot(x,ggplot2::aes(period_end_year,area_ha))+
@@ -179,11 +192,42 @@ atlas_server <- function(d) function(input, output, session) {
       ggplot2::scale_y_continuous(limits=c(0,NA),labels=function(x) format(x,big.mark=',',scientific=FALSE))+
       ggplot2::scale_x_continuous(breaks=c(2019,2022),labels=c('2018-19','2021-22'),expand=ggplot2::expansion(mult=c(.2,.2)))+
       ggplot2::labs(x=NULL,y='Cumulative hectares',caption='2037 target: 200,000 ha per measure (beyond the displayed scale)')+chart_theme()
-  },res=110)
+  },res=110,alt='Reported activity chart. Exact values, coverage and source pages are available in the accessible evidence table below.')
+  output$activity_table <- renderUI({
+    x <- d$activity
+    tags$table(class='evidence-table',tags$caption('All reported activity records. Statewide already includes priority and other locations.'),
+      tags$thead(tags$tr(lapply(c('Measure','Year','Coverage','Basis','Reported ha','Target ha','Source page'),tags$th))),
+      tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(lapply(c(x$action[i],x$financial_year[i],x$coverage[i],
+        x$basis[i],number(x$area_ha[i]),if(is.na(x$target_ha[i])) 'Not applicable' else number(x$target_ha[i]),x$source_pdf_page[i]),tags$td)))))
+  })
+  output$download_tableau <- downloadHandler(
+    filename=function() 'Biodiversity_2037_Progress.twbx',
+    content=function(file) file.copy('tableau/Biodiversity_2037_Progress.twbx',file),
+    contentType='application/octet-stream')
   output$tableau <- renderUI({
-    url<-Sys.getenv('TABLEAU_VIEW_URL','')
-    if(nzchar(url)&&grepl('^https://public[.]tableau[.]com/views/[A-Za-z0-9_/-]+',url))
-      tags$iframe(src=url,title='Biodiversity 2037 Tableau dashboard',width='100%',height='800',style='border:0',loading='lazy')
-    else p(class='caption','This first release uses interactive R controls and R charts. The Tableau workbook is the next stage; no Tableau view has been connected yet.')
+    config <- tableau_config()
+    if(config$valid) div(id='tableau-host',`data-view-url`=config$url,
+      `data-release`=d$activity_release,
+      div(id='tableau-status',role='status',`aria-live`='polite','Loading the published Tableau dashboard…'),
+      tags$button(type='button',id='tableau-retry',class='button-outline','Retry Tableau'),
+      tags$a(href=config$url,target='_blank',rel='noopener','Open in Tableau Public'),
+      div(id='tableau-mount'),
+      p(class='caption','Map selections never filter these statewide figures. The local evidence below remains available if Tableau is unavailable.'))
+    else div(class='empty-state',role='status',
+      h3(if(config$configured) 'Check the Tableau view address' else 'Explore the Tableau workbook'),
+      p(if(config$configured) 'Use the HTTPS Tableau Public /views/Workbook/ProgressOverview address in config/app.json.'
+        else 'The charts below work locally. Download the companion workbook to explore the same measures in Tableau Desktop.'),
+      downloadButton('download_tableau','Download Tableau workbook'))
+  })
+  observe({
+    req(input$year,input$trend_action)
+    session$sendCustomMessage('progress-state',list(year=input$year,action=input$trend_action))
+  })
+  observeEvent(input$tableau_parameter,{
+    p <- input$tableau_parameter
+    if(identical(p$name,'Selected year') && p$value %in% d$activity$financial_year)
+      updateSelectInput(session,'year',selected=p$value)
+    if(identical(p$name,'Selected action') && p$value %in% c('All actions',unique(annual_progress(d)$action)))
+      updateSelectInput(session,'trend_action',selected=p$value)
   })
 }

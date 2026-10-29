@@ -1,0 +1,7 @@
+"package","version"
+"shiny","1.14.0"
+"leaflet","2.2.3"
+"sf","1.1.2"
+"ggplot2","4.0.3"
+"jsonlite","2.0.0"
+"htmltools","0.5.9"

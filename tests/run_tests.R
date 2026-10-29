@@ -33,3 +33,31 @@ shiny::testServer(atlas_server(d), {
   check(focus()$CE_RANK==88 && abs(focus()$share15-97.9825)<.0001,'second reference area')
 })
 cat('TOTAL',checks,'checks passed.\n')
+
+# Additional behaviours introduced by the completed atlas and Tableau data contract.
+rank_map <- map_spec(d,'Control Foxes','rank')
+share_map <- map_spec(d,'Control Foxes','share15')
+hectare_map <- map_spec(d,'Control Foxes','hectares')
+check(rank_map$limit==100 && share_map$limit==100,'rank and share map scales remain fixed')
+idx <- match('unit668',d$areas$microID)
+check(abs(share_map$values[idx]-52.5993)<.0001 && hectare_map$values[idx]==3855,'map measure switch uses the correct denominator and hectares')
+check(is.na(share_map$values[match('unit925',d$areas$microID)]),'missing opportunity stays missing on every map measure')
+check(hectare_map$limit==max(d$actions$AREA_20[d$actions$Action=='Control Foxes']),'hectare legend covers the complete action extent')
+progress <- progress_dataset(d)
+check(nrow(progress)==20 && !anyDuplicated(progress[c('action','financial_year')]),'Tableau input has one scope-correct action/year row')
+annual <- progress[progress$basis=='annual',]
+check(nrow(annual)==12 && all(annual$coverage=='priority'),'annual Tableau targets never include duplicate statewide rows')
+check(abs(annual$priority_share_pct[annual$action=='Pest herbivore control' & annual$financial_year=='2021-22']-100*1632390/1944107)<1e-8,'priority share uses matching statewide denominator')
+check(all(progress$target_ha[progress$basis=='cumulative_since_2017']==200000),'cumulative targets keep their separate 2037 basis')
+check(all(progress$data_release==d$activity_release),'Tableau input identifies the exact activity release')
+config_file <- tempfile(fileext='.json');writeLines('{"tableau_view_url":"https://public.tableau.com/views/Biodiversity/ProgressOverview?:showVizHome=no"}',config_file)
+check(tableau_config(config_file)$url=='https://public.tableau.com/views/Biodiversity/ProgressOverview','share URL is normalised to a view address')
+writeLines('{"tableau_view_url":"https://public.tableau.com.evil.example/views/Biodiversity/ProgressOverview"}',config_file)
+check(!tableau_config(config_file)$valid,'lookalike Tableau host is rejected')
+unlink(config_file)
+# Verify normal-size text contrast for every palette colour and the missing-data cell.
+lum <- function(col) {r<-grDevices::col2rgb(col)/255;l<-ifelse(r<=.04045,r/12.92,((r+.055)/1.055)^2.4);colSums(l*c(.2126,.7152,.0722))}
+background <- c(rank_palette,'#e1e3df');foreground<-cell_text_colour(background)
+contrast <- (pmax(lum(background),lum(foreground))+.05)/(pmin(lum(background),lum(foreground))+.05)
+check(all(contrast>=4.5),'every heatmap label meets AA text contrast')
+cat('TOTAL',checks,'checks passed.\n')
