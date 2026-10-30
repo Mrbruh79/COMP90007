@@ -12,7 +12,7 @@ From this project's root:
 shiny::runApp()
 ```
 
-The local application ZIP includes `data/smp_cache.rds`, original boundaries, and prepared land cover summaries. It needs no raster processing or online map tiles to run. Place labels are optional and require an internet connection. When cloning this repository, prepare the spatial cache first:
+The local application ZIP includes `data/smp_cache.rds`, original boundaries, and prepared land cover summaries. It needs no raster processing or online map tiles to run. When cloning this repository, prepare the spatial cache first:
 
 ```sh
 Rscript scripts/prepare_data.R

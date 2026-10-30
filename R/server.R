@@ -37,8 +37,6 @@ atlas_server <- function(d) function(input, output, session) {
     a <- isolate(chosen_action());s <- map_spec(d,a)
     leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12,zoomSnap=.25)) |>
       leaflet::fitBounds(140.9,-39.2,150.05,-33.95) |>
-      leaflet::addProviderTiles('CartoDB.Positron',group='context',options=leaflet::providerTileOptions(opacity=.5)) |>
-      leaflet::hideGroup('context') |>
       leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.85,
         color='#f7f6f1',weight=.3,opacity=.6,label=paste(d$areas$Name,action_labels[[a]],s$formatted,sep=' / '),
         highlightOptions=leaflet::highlightOptions(color='#203c32',weight=2,bringToFront=TRUE)) |>
@@ -70,10 +68,6 @@ atlas_server <- function(d) function(input, output, session) {
       color='#142e23',weight=3,options=leaflet::pathOptions(interactive=FALSE))
     chosen_action()
   })
-  observeEvent(input$map_context,{
-    proxy <- leaflet::leafletProxy('priority_map')
-    if(isTRUE(input$map_context)) proxy |> leaflet::showGroup('context') else proxy |> leaflet::hideGroup('context')
-  })
   observeEvent(input$zoom_area,{
     b <- sf::st_bbox(d$areas[d$areas$microID==selected(),])
     leaflet::leafletProxy('priority_map') |> leaflet::fitBounds(b[['xmin']],b[['ymin']],b[['xmax']],b[['ymax']])
@@ -99,7 +93,7 @@ atlas_server <- function(d) function(input, output, session) {
         p(class='caption',paste('Higher ranks indicate stronger expected benefits relative to cost for',paste0(tolower(action_labels[[chosen_action()]]),'.'))),
         p(class='detail-label','Relevant land for this action'),div(class='area-value',number(r$AREA_TOT),span(' ha')),
         p(class='caption','Relevant hectares as reported by the source. One hectare is 10,000 square metres.'),
-        tags$details(tags$summary('Evidence for this selection'),p('The government supplies the median cost effectiveness rank for this area and action. It is a relative ranking, not an area’s position in a numbered list or a percentage chance of success.'),p(paste('Source rank range:',display_text(r$CE_RANGE))),
+        tags$details(tags$summary('Evidence for this selection'),p('The government supplies the median cost effectiveness rank for this area and action. It is a relative ranking, not an area’s position in a numbered list or a percentage chance of success.'),p(paste('Source rank range:',display_text(gsub('[-\u2013\u2014]', ' to ', r$CE_RANGE)))),
           p('This is a source range, not a confidence interval.'),p(paste('Snapshot:',format(as.Date(d$retrieved),'%d %B %Y'))),
           tags$a(href=paste0('https://bio-prd-naturekit-public-data.s3-ap-southeast-2.amazonaws.com/smp-reports/summary_areas_v4/SMPreport_Summary_',selected(),'.html'),target='_blank',rel='noopener','Open official area report'),p('Report values may differ from this service snapshot.'))))
   })

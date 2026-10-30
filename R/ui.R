@@ -25,7 +25,6 @@ atlas_ui <- function(d) {
             selectizeInput('area','2. Find an area',choices=setNames(d$areas$microID,d$areas$Name),selected='unit668',options=list(placeholder='Search a unit number',maxOptions=nrow(d$areas),openOnFocus=FALSE,onInitialize=I("function() { this.$control_input.attr('autocomplete', 'off'); this.$control.addClass('unit-search-control'); }"),onDropdownOpen=I("function() { if (!this.$control_input.val().trim()) this.close(); }"))),
             p(class='caption unit-search-hint',paste('Each unit is a mapped area. Search all',number(nrow(d$areas)),'units by number, or click the map.')),
             actionButton('zoom_area','Zoom to selected area',class='button-outline'),
-            checkboxInput('map_context','Show place labels online',FALSE),
             actionButton('pin','Pin this area',class='button-primary'),
             div(class='pin-section',h3('Pinned areas'),uiOutput('pinned'),textOutput('pin_message')),
             actionButton('clear','Clear comparison',class='button-outline'),

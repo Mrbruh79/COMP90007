@@ -25,7 +25,6 @@ landscape_ui <- function(d) {
         selectInput('land_metric','What should the map show?',choices=c('Cover in the later period (%)'='share','Change between periods'='change'),selected='change'),
         p(class='caption','Use cover to compare areas at one time, or change to compare the two periods.'),
         actionButton('land_zoom','Zoom to selected area',class='button-outline'),
-        checkboxInput('land_context','Show place labels online',FALSE),
         actionButton('land_pin','Pin this area',class='button-primary'),
         div(class='pin-section',h3('Pinned areas'),uiOutput('land_pinned')),
         actionButton('land_clear','Clear comparison',class='button-outline'),

@@ -47,8 +47,6 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
     s<-isolate(map_data());id<-isolate(selected())
     leaflet::leaflet(d$areas,options=leaflet::leafletOptions(preferCanvas=TRUE,minZoom=4,maxZoom=12)) |>
       leaflet::fitBounds(140.9,-39.2,150.05,-33.95) |>
-      leaflet::addProviderTiles('CartoDB.Positron',group='context',options=leaflet::providerTileOptions(opacity=.5)) |>
-      leaflet::hideGroup('context') |>
       leaflet::addPolygons(layerId=~microID,group='areas',fillColor=s$colours,fillOpacity=.9,
         color='#aebbad',weight=.45,opacity=.85,label=paste(d$areas$Name,isolate(display_text(class_label())),s$formatted,sep=' / ')) |>
       leaflet::addPolygons(data=d$areas[d$areas$microID==id,],group='selection',fill=FALSE,
@@ -80,10 +78,6 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   observeEvent(input$landcover_map_shape_click,{
     id<-input$landcover_map_shape_click$id
     if(!is.null(id) && id %in% d$areas$microID) updateSelectizeInput(session,'area',selected=id)
-  })
-  observeEvent(input$land_context,{
-    proxy<-leaflet::leafletProxy('landcover_map')
-    if(isTRUE(input$land_context)) proxy |> leaflet::showGroup('context') else proxy |> leaflet::hideGroup('context')
   })
   observeEvent(input$land_zoom,{
     b<-sf::st_bbox(d$areas[d$areas$microID==selected(),])
@@ -130,11 +124,10 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
 
   # Use one table layout for selected cover comparisons and the full class evidence.
   make_table<-function(x,caption) tags$table(class='evidence-table',
-    tags$caption(caption),tags$thead(tags$tr(lapply(c('Area','Cover type','Earlier cover (%)','Later cover (%)','Change (percentage points)','Change (hectares)','Classified land (%) earlier / later'),function(t) tags$th(scope='col',t)))),
+    tags$caption(caption),tags$thead(tags$tr(lapply(c('Area','Cover type','Earlier cover (%)','Later cover (%)','Change (percentage points)','Change (hectares)'),function(t) tags$th(scope='col',t)))),
     tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(
       tags$th(scope='row',unit_name(x$microID[i])),tags$td(display_text(x$class_label[i])),
-      tags$td(fmt(x$share_pct_start[i])),tags$td(fmt(x$share_pct_end[i])),tags$td(fmt(x$change_pp[i])),tags$td(fmt(x$change_ha[i])),
-      tags$td(paste(fmt(x$coverage_pct_start[i],'%'),fmt(x$coverage_pct_end[i],'%'),sep=' / '))))))
+      tags$td(fmt(x$share_pct_start[i])),tags$td(fmt(x$share_pct_end[i])),tags$td(fmt(x$change_pp[i])),tags$td(fmt(x$change_ha[i]))))))
   output$land_comparison<-renderUI(make_table(comparison(),paste(display_text(class_label()),'/',period_label(),'/ each area shown separately')))
   # Compare all cover types in the main area using either hectares or percentage points.
   output$class_changes<-renderPlot({
