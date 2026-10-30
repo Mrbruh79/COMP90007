@@ -32,6 +32,18 @@ Run `python scripts/build_tableau.py`. The generator uses the native validated X
 
 Run `python tests/check_tableau.py` and `node tests/landscape_bridge.cjs` for the data/package and parameter-bridge checks.
 
+If a workbook saved with an extract reports that `landcover.csv` is missing, its original CSV connection may point to an expired Tableau temporary folder. For local authoring, use Edit Connection to select `tableau/data/landcover.csv`. The `.twb` beside that data folder is also available for editing. Keep the data folder with it.
+
+Before moving or submitting a saved `.twbx`, restore its bundled CSV without changing the extract or sheet layouts:
+
+```sh
+python scripts/repair_tableau_package.py --output tableau/Victoria_Landscape_Change.twbx
+python tests/tableau_saved_package.py
+python tests/check_tableau.py
+```
+
+The repair saves a backup when replacing the input file. It retains the saved workbook's parameters, calculations, layouts and extract, adds the frozen CSV, and uses a package-relative source path. The submission builder rejects packages with missing source files, mismatched releases or external temporary paths. Opening the data-source tab and refreshing its preview are part of the native workbook check.
+
 Republish under the existing **Victoria_Landscape_Change** workbook name and **LandscapeChange** dashboard name. Keep this dashboard selected when publishing. The Shiny embed reads the publication's canvas size, supporting the older publication during the handover. Restart Shiny after updating the local files, then check that a map selection updates the title, lines, composition area and endpoint values. The replacement publication requires this final check after upload.
 
 Display labels use words in place of dash punctuation. The chart axes abbreviate years, such as 1985/90; headings and Shiny controls retain full years. Parameter aliases change display text while original source values remain available to the bridge.

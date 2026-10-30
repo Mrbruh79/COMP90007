@@ -11,3 +11,4 @@ docs/push-payload.json
 
 *.twbr
 dist/
+__pycache__/

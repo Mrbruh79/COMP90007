@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import zipfile
+from repair_tableau_package import validate_sources
 
 ROOT = Path(__file__).resolve().parents[1]
 required = [
@@ -19,6 +20,7 @@ for name in required:
         raise SystemExit(f'Missing {name}; prepare the local data/workbook first.')
 
 files = {ROOT / name for name in required}
+validate_sources(ROOT / 'tableau/Victoria_Landscape_Change.twbx')
 for name in ['R', 'www', 'scripts', 'tests', 'data/landcover']:
     files.update(p for p in (ROOT / name).rglob('*')
                  if p.is_file() and not any(part.startswith('.') or part == '__pycache__'
