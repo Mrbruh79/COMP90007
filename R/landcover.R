@@ -90,7 +90,7 @@ landcover_map_spec <- function(d,code,from,to,metric='share') {
   colours<-ifelse(is.na(vals),'#e1e3df',pal[index])
   label<-if(metric=='change') 'Change in cover (percentage points)' else 'Cover in later period (%)'
   list(values=vals,colours=colours,rows=x,label=label,metric=metric,limit=limit,
-    formatted=ifelse(is.na(vals),'No classified coverage',paste0(ifelse(metric=='change' & vals>0,'+',''),number(vals,1),if(metric=='change') ' percentage points' else '%')))
+    formatted=ifelse(is.na(vals),'No classified coverage',paste0(ifelse(metric=='change' & vals>=1e-8,'+',''),format_measure(vals,if(metric=='change') ' percentage points' else '%',zero_tolerance=if(metric=='change') 1e-8 else 0))))
 }
 # Explain the current map scale and preserve a separate missing coverage category.
 landcover_legend <- function(s) htmltools::HTML(paste0('<strong>',s$label,'</strong>',

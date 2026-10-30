@@ -24,7 +24,7 @@ Boundary layer: https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/Nature
 
 Action table: https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer/1
 
-The actual frozen cache was retrieved 22 October 2026. The 21 October date in the handoff describes an earlier snapshot; it is not substituted for local provenance. The displayed SMP4 model release is July 2023, supported by NatureKit's dataset guide.
+The bundled SMP cache records a retrieval date of 21 October 2026. This date is shown in the app and its exports. Its RDS fingerprint differs from the cache used during land cover preparation; startup verifies the frozen original boundary file, source attributes and display geometry rather than replacing retrieval metadata. The displayed SMP4 model release is July 2023, supported by NatureKit's dataset guide.
 
 The existing source terms apply independently of land cover's CC BY 4.0. No new licence is asserted over SMP4. Original boundaries are frozen in data/smp_original.rds, with the hash used in the land-cover release. Analytical processing transforms and repairs these vertices in EPSG:3111. Three originally invalid geometries become valid; maximum planar repair-area change was about 0.0001 square metres. Display geometry remains simplified to 100 m and is never used for the overlay.
 
@@ -37,3 +37,5 @@ CE_RANK is a median relative model rank, not probability, financial return or ob
 Per-unit class fractions use exact polygon-cell intersection coverage at the native resolution. Finite-precision fraction accumulators are checked against projected polygon area, with a strict 0.1 ha closure bound on the largest units, before normalisation to polygon hectares. Unclassified and NoData fractions remain separate through normalisation. Values are projected grid hectares in EPSG:3111, not geodesic surface areas.
 
 Every exported record identifies its release, unit, epoch, class, coverage, denominator, source and attribution. Per-source MD5 fingerprints provide reproducibility, not a security guarantee. No resampling, raster reclassification or annual interpolation is used. Net totals do not identify class-to-class transitions, degradation or recovery.
+
+Display formatting retains small nonzero cover shares as <0.1. Derived changes below an absolute 0.00000001 percentage points or hectares are displayed as zero to avoid presenting floating point residuals as measured change. Calculations and downloads retain the source precision.

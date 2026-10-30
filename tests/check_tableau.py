@@ -29,8 +29,10 @@ for ws in r.findall('worksheets/worksheet'):
   filters=ws.findall('table/view/filter')
   assert any('FocusMatch' in f.attrib['column'] for f in filters)
   assert any('FocusViewMatch' in f.attrib['column'] for f in filters)
- elif ws.attrib['name']=='T03_EndpointComparison':
-  assert any(e.attrib.get('max')=='100.0' and e.attrib.get('min')=='0.0' for e in axes)
+ elif ws.attrib['name']=='T04_NetChange':
+  assert any(e.attrib.get('max')=='100.0' and e.attrib.get('min')=='-100.0' and e.attrib.get('range-type')=='fixed' for e in axes)
+  assert all(any(key in f.attrib['column'] for f in ws.findall('table/view/filter')) for key in ['CompareMatch','ClassMatch','EndpointMatch'])
+  assert not any('AreaSeries' in f.attrib['column'] for f in ws.findall('table/view/filter'))
 assert any(z.attrib.get('param')=='[Parameters].[FocusView]' for z in r.findall('dashboards/dashboard/zones//zone'))
 calc=r.find("datasources/datasource[@name='federated.landcover']/column[@name='[FocusViewMatch]']/calculation")
 assert calc is not None and 'Selected cover type' in calc.attrib['formula'] and '[Parameters].[LandClass]' in calc.attrib['formula']
@@ -50,7 +52,8 @@ for unit in ['unit668','unit375','unit925']:
  assert len(x)==7
 # Reconcile the Tableau table against independently saved runtime summaries, all rows.
 with gzip.open(root/'data/landcover/summary.csv.gz','rt') as f: runtime={(r['microID'],r['epoch_id'],r['class_code']):r for r in csv.DictReader(f)}
-assert all(abs(float(r['area_ha'])-float(runtime[(r['microID'],r['epoch_id'],r['class_code'])]['area_ha']))<1e-8 for r in rows)
+for field in ['area_ha','share_pct','valid_area_ha','coverage_pct','unclassified_area_ha','nodata_area_ha']:
+ assert all(abs(float(row[field])-float(runtime[(row['microID'],row['epoch_id'],row['class_code'])][field]))<1e-8 for row in rows), field
 # The focused composition retains 19 classes, while a selected type retains all seven periods.
 focused=[x for x in rows if x['microID']=='unit668']
 assert len(focused)==7*19
@@ -73,4 +76,5 @@ assert 'FIXED [microID], [class_label]' in source.find("column[@name='[TrendValu
 annual={x['epoch_id']:float(x['share_pct']) for x in focused if x['class_label']=='Treed native vegetation'}
 assert abs((annual['2015_2019']-annual['1985_1990'])-.695)<.01
 assert source.find("column[@name='[ChangePP]']/calculation") is not None
+assert '<0.1%' in source.find("column[@name='[ChangeLabel]']/calculation").attrib['formula']
 print('PASS Tableau data/package, seven-group closure, per-area coverage aggregation, baseline-change reference and three-chart structure')

@@ -18,6 +18,7 @@
     constructor(client, report) {
       this.client = client; this.report = report; this.desired = null;
       this.applied = {}; this.busy = false; this.ready = false; this.closed = false;
+      this.revision = 0;
     }
     async connect(release) {
       const parameters = await this.client.getParametersAsync();
@@ -33,7 +34,21 @@
       this.ready = true;
       await this.flush();
     }
-    update(state) { this.desired = {...state}; return this.flush(); }
+    update(state) { this.revision += 1; this.desired = {...state}; return this.flush(); }
+    async readParameterChange(read) {
+      if (!this.ready || this.busy || this.closed) return null;
+      const revision = this.revision;
+      const parameter = await read();
+      // A newer Shiny selection can arrive while Tableau resolves this event.
+      // Ignore that stale response, and ignore echoes of our own applied values.
+      if (this.closed || this.busy || revision !== this.revision) return null;
+      const key = Object.keys(PARAMETERS).find(key => PARAMETERS[key] === parameter.name);
+      const value = parameter.currentValue.value;
+      if (!key || this.applied[parameter.name] === value) return null;
+      this.applied[parameter.name] = value;
+      this.desired = {...this.desired, [key]:value};
+      return {name:parameter.name,key,value};
+    }
     async flush() {
       if (!this.ready || this.busy || this.closed || !this.desired) return;
       this.busy = true;
@@ -131,14 +146,10 @@
       viz.addEventListener(TableauEventType.ParameterChanged,async event => {
         if (current !== ticket || !ticket.bridge?.ready || ticket.bridge.busy) return;
         try {
-          const p = await event.detail.getParameterAsync();
-          const key = Object.keys(PARAMETERS).find(key => PARAMETERS[key] === p.name);
-          if (!key) return;
-          const value = p.currentValue.value;
-          ticket.bridge.applied[p.name] = value;
-          desired[key] = value;
-          ticket.bridge.desired = {...desired};
-          if (window.Shiny) Shiny.setInputValue('tableau_parameter',{name:p.name,value},{priority:'event'});
+          const change = await ticket.bridge.readParameterChange(() => event.detail.getParameterAsync());
+          if (current !== ticket || !change) return;
+          desired = {...ticket.bridge.desired};
+          if (window.Shiny) Shiny.setInputValue('tableau_parameter',{name:change.name,value:change.value},{priority:'event'});
         } catch(error) { status(host,'error','Tableau selection could not be read. Use the area, class and epoch controls above.'); }
       });
       host.querySelector('#tableau-mount').append(viz);

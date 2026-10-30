@@ -4627,15 +4627,15 @@
         <calculation class="tableau" formula="IF [Parameters].[FocusView] &lt;&gt; &quot;Grouped overview&quot; THEN TRIM(REPLACE([class_label],&quot; - &quot;,&quot; &quot;)) ELSE CASE [class_code] WHEN 1 THEN &quot;Developed / disturbed&quot; WHEN 2 THEN &quot;Developed / disturbed&quot; WHEN 3 THEN &quot;Developed / disturbed&quot; WHEN 4 THEN &quot;Agriculture&quot; WHEN 5 THEN &quot;Agriculture&quot; WHEN 8 THEN &quot;Agriculture&quot; WHEN 7 THEN &quot;Plantations / exotic trees&quot; WHEN 15 THEN &quot;Plantations / exotic trees&quot; WHEN 6 THEN &quot;Plantations / exotic trees&quot; WHEN 14 THEN &quot;Natural low cover&quot; WHEN 17 THEN &quot;Open water&quot; WHEN 9 THEN &quot;Wetland vegetation&quot; WHEN 16 THEN &quot;Wetland vegetation&quot; WHEN 18 THEN &quot;Wetland vegetation&quot; WHEN 19 THEN &quot;Wetland vegetation&quot; ELSE &quot;Other native vegetation&quot; END END" />
       </column>
       <column caption="Changelabel" datatype="string" name="[ChangeLabel]" role="measure" type="nominal">
-        <calculation class="tableau" formula="STR(ROUND(SUM([EarlierShare]),1)) + &quot;% to &quot; + STR(ROUND(SUM([LaterShare]),1)) + &quot;%   |   &quot; + IF ROUND(SUM([ChangePP]),1) &gt; 0 THEN &quot;+&quot; ELSE &quot;&quot; END + STR(ROUND(SUM([ChangePP]),1)) + &quot; pp&quot;" />
+        <calculation class="tableau" formula="(IF SUM([EarlierShare]) &gt; 0 AND ROUND(SUM([EarlierShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([EarlierShare]),1)) + &quot;%&quot; END) + &quot; to &quot; + (IF SUM([LaterShare]) &gt; 0 AND ROUND(SUM([LaterShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([LaterShare]),1)) + &quot;%&quot; END) + &quot;   |   &quot; + (IF ABS(SUM([ChangePP])) &lt; 0.00000001 THEN &quot;0.0 pp&quot; ELSE (IF SUM([ChangePP]) &gt; 0 THEN &quot;+&quot; ELSEIF SUM([ChangePP]) &lt; 0 THEN &quot;-&quot; ELSE &quot;&quot; END) + (IF SUM([ChangePP]) &lt;&gt; 0 AND ROUND(ABS(SUM([ChangePP])),1) = 0 THEN &quot;&lt;0.1&quot; ELSE STR(ROUND(ABS(SUM([ChangePP])),1)) END) + &quot; pp&quot; END)" />
       </column>
-      <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+      <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
         <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[StartEpoch] THEN [share_pct] END" />
       </column>
-      <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+      <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
         <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] END" />
       </column>
-      <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0&quot; pp&quot;;-0.0&quot; pp&quot;;0.0&quot; pp&quot;">
+      <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0####&quot; pp&quot;;-0.0####&quot; pp&quot;;0.0&quot; pp&quot;">
         <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] ELSEIF [epoch_label] = [Parameters].[StartEpoch] THEN -[share_pct] END" />
       </column>
       <column caption="Cover share (%) / baseline change (pp)" datatype="real" name="[TrendValue]" role="measure" type="quantitative">
@@ -17580,15 +17580,15 @@
               <calculation class="tableau" formula="IF [Parameters].[FocusView] &lt;&gt; &quot;Grouped overview&quot; THEN TRIM(REPLACE([class_label],&quot; - &quot;,&quot; &quot;)) ELSE CASE [class_code] WHEN 1 THEN &quot;Developed / disturbed&quot; WHEN 2 THEN &quot;Developed / disturbed&quot; WHEN 3 THEN &quot;Developed / disturbed&quot; WHEN 4 THEN &quot;Agriculture&quot; WHEN 5 THEN &quot;Agriculture&quot; WHEN 8 THEN &quot;Agriculture&quot; WHEN 7 THEN &quot;Plantations / exotic trees&quot; WHEN 15 THEN &quot;Plantations / exotic trees&quot; WHEN 6 THEN &quot;Plantations / exotic trees&quot; WHEN 14 THEN &quot;Natural low cover&quot; WHEN 17 THEN &quot;Open water&quot; WHEN 9 THEN &quot;Wetland vegetation&quot; WHEN 16 THEN &quot;Wetland vegetation&quot; WHEN 18 THEN &quot;Wetland vegetation&quot; WHEN 19 THEN &quot;Wetland vegetation&quot; ELSE &quot;Other native vegetation&quot; END END" />
             </column>
             <column caption="Changelabel" datatype="string" name="[ChangeLabel]" role="measure" type="nominal">
-              <calculation class="tableau" formula="STR(ROUND(SUM([EarlierShare]),1)) + &quot;% to &quot; + STR(ROUND(SUM([LaterShare]),1)) + &quot;%   |   &quot; + IF ROUND(SUM([ChangePP]),1) &gt; 0 THEN &quot;+&quot; ELSE &quot;&quot; END + STR(ROUND(SUM([ChangePP]),1)) + &quot; pp&quot;" />
+              <calculation class="tableau" formula="(IF SUM([EarlierShare]) &gt; 0 AND ROUND(SUM([EarlierShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([EarlierShare]),1)) + &quot;%&quot; END) + &quot; to &quot; + (IF SUM([LaterShare]) &gt; 0 AND ROUND(SUM([LaterShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([LaterShare]),1)) + &quot;%&quot; END) + &quot;   |   &quot; + (IF ABS(SUM([ChangePP])) &lt; 0.00000001 THEN &quot;0.0 pp&quot; ELSE (IF SUM([ChangePP]) &gt; 0 THEN &quot;+&quot; ELSEIF SUM([ChangePP]) &lt; 0 THEN &quot;-&quot; ELSE &quot;&quot; END) + (IF SUM([ChangePP]) &lt;&gt; 0 AND ROUND(ABS(SUM([ChangePP])),1) = 0 THEN &quot;&lt;0.1&quot; ELSE STR(ROUND(ABS(SUM([ChangePP])),1)) END) + &quot; pp&quot; END)" />
             </column>
-            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[StartEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0&quot; pp&quot;;-0.0&quot; pp&quot;;0.0&quot; pp&quot;">
+            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0####&quot; pp&quot;;-0.0####&quot; pp&quot;;0.0&quot; pp&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] ELSEIF [epoch_label] = [Parameters].[StartEpoch] THEN -[share_pct] END" />
             </column>
             <column caption="Cover share (%) / baseline change (pp)" datatype="real" name="[TrendValue]" role="measure" type="quantitative">
@@ -17701,7 +17701,7 @@
         <rows>[federated.landcover].[sum:share_pct:qk]</rows>
         <cols>[federated.landcover].[none:EpochDisplay:nk]</cols>
       </table>
-      <simple-id uuid="{8AA685FD-7C54-420A-88B2-15DB5163AC42}" />
+      <simple-id uuid="{6B5043CA-5847-4C6D-A6AB-C60DDB388B3A}" />
     </worksheet>
     <worksheet name="T02_ClassTrajectories">
       <layout-options>
@@ -17766,15 +17766,15 @@
               <calculation class="tableau" formula="IF [Parameters].[FocusView] &lt;&gt; &quot;Grouped overview&quot; THEN TRIM(REPLACE([class_label],&quot; - &quot;,&quot; &quot;)) ELSE CASE [class_code] WHEN 1 THEN &quot;Developed / disturbed&quot; WHEN 2 THEN &quot;Developed / disturbed&quot; WHEN 3 THEN &quot;Developed / disturbed&quot; WHEN 4 THEN &quot;Agriculture&quot; WHEN 5 THEN &quot;Agriculture&quot; WHEN 8 THEN &quot;Agriculture&quot; WHEN 7 THEN &quot;Plantations / exotic trees&quot; WHEN 15 THEN &quot;Plantations / exotic trees&quot; WHEN 6 THEN &quot;Plantations / exotic trees&quot; WHEN 14 THEN &quot;Natural low cover&quot; WHEN 17 THEN &quot;Open water&quot; WHEN 9 THEN &quot;Wetland vegetation&quot; WHEN 16 THEN &quot;Wetland vegetation&quot; WHEN 18 THEN &quot;Wetland vegetation&quot; WHEN 19 THEN &quot;Wetland vegetation&quot; ELSE &quot;Other native vegetation&quot; END END" />
             </column>
             <column caption="Changelabel" datatype="string" name="[ChangeLabel]" role="measure" type="nominal">
-              <calculation class="tableau" formula="STR(ROUND(SUM([EarlierShare]),1)) + &quot;% to &quot; + STR(ROUND(SUM([LaterShare]),1)) + &quot;%   |   &quot; + IF ROUND(SUM([ChangePP]),1) &gt; 0 THEN &quot;+&quot; ELSE &quot;&quot; END + STR(ROUND(SUM([ChangePP]),1)) + &quot; pp&quot;" />
+              <calculation class="tableau" formula="(IF SUM([EarlierShare]) &gt; 0 AND ROUND(SUM([EarlierShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([EarlierShare]),1)) + &quot;%&quot; END) + &quot; to &quot; + (IF SUM([LaterShare]) &gt; 0 AND ROUND(SUM([LaterShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([LaterShare]),1)) + &quot;%&quot; END) + &quot;   |   &quot; + (IF ABS(SUM([ChangePP])) &lt; 0.00000001 THEN &quot;0.0 pp&quot; ELSE (IF SUM([ChangePP]) &gt; 0 THEN &quot;+&quot; ELSEIF SUM([ChangePP]) &lt; 0 THEN &quot;-&quot; ELSE &quot;&quot; END) + (IF SUM([ChangePP]) &lt;&gt; 0 AND ROUND(ABS(SUM([ChangePP])),1) = 0 THEN &quot;&lt;0.1&quot; ELSE STR(ROUND(ABS(SUM([ChangePP])),1)) END) + &quot; pp&quot; END)" />
             </column>
-            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[StartEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0&quot; pp&quot;;-0.0&quot; pp&quot;;0.0&quot; pp&quot;">
+            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0####&quot; pp&quot;;-0.0####&quot; pp&quot;;0.0&quot; pp&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] ELSEIF [epoch_label] = [Parameters].[StartEpoch] THEN -[share_pct] END" />
             </column>
             <column caption="Cover share (%) / baseline change (pp)" datatype="real" name="[TrendValue]" role="measure" type="quantitative">
@@ -17901,7 +17901,7 @@
         <rows>[federated.landcover].[sum:TrendValue:qk]</rows>
         <cols>[federated.landcover].[none:EpochDisplay:nk]</cols>
       </table>
-      <simple-id uuid="{C5928A22-2FD4-417C-B0FA-91098B7EBAAD}" />
+      <simple-id uuid="{8A8D8A7F-A491-486E-A070-21727F482DDF}" />
     </worksheet>
     <worksheet name="T04_NetChange">
       <layout-options>
@@ -17966,15 +17966,15 @@
               <calculation class="tableau" formula="IF [Parameters].[FocusView] &lt;&gt; &quot;Grouped overview&quot; THEN TRIM(REPLACE([class_label],&quot; - &quot;,&quot; &quot;)) ELSE CASE [class_code] WHEN 1 THEN &quot;Developed / disturbed&quot; WHEN 2 THEN &quot;Developed / disturbed&quot; WHEN 3 THEN &quot;Developed / disturbed&quot; WHEN 4 THEN &quot;Agriculture&quot; WHEN 5 THEN &quot;Agriculture&quot; WHEN 8 THEN &quot;Agriculture&quot; WHEN 7 THEN &quot;Plantations / exotic trees&quot; WHEN 15 THEN &quot;Plantations / exotic trees&quot; WHEN 6 THEN &quot;Plantations / exotic trees&quot; WHEN 14 THEN &quot;Natural low cover&quot; WHEN 17 THEN &quot;Open water&quot; WHEN 9 THEN &quot;Wetland vegetation&quot; WHEN 16 THEN &quot;Wetland vegetation&quot; WHEN 18 THEN &quot;Wetland vegetation&quot; WHEN 19 THEN &quot;Wetland vegetation&quot; ELSE &quot;Other native vegetation&quot; END END" />
             </column>
             <column caption="Changelabel" datatype="string" name="[ChangeLabel]" role="measure" type="nominal">
-              <calculation class="tableau" formula="STR(ROUND(SUM([EarlierShare]),1)) + &quot;% to &quot; + STR(ROUND(SUM([LaterShare]),1)) + &quot;%   |   &quot; + IF ROUND(SUM([ChangePP]),1) &gt; 0 THEN &quot;+&quot; ELSE &quot;&quot; END + STR(ROUND(SUM([ChangePP]),1)) + &quot; pp&quot;" />
+              <calculation class="tableau" formula="(IF SUM([EarlierShare]) &gt; 0 AND ROUND(SUM([EarlierShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([EarlierShare]),1)) + &quot;%&quot; END) + &quot; to &quot; + (IF SUM([LaterShare]) &gt; 0 AND ROUND(SUM([LaterShare]),1) = 0 THEN &quot;&lt;0.1%&quot; ELSE STR(ROUND(SUM([LaterShare]),1)) + &quot;%&quot; END) + &quot;   |   &quot; + (IF ABS(SUM([ChangePP])) &lt; 0.00000001 THEN &quot;0.0 pp&quot; ELSE (IF SUM([ChangePP]) &gt; 0 THEN &quot;+&quot; ELSEIF SUM([ChangePP]) &lt; 0 THEN &quot;-&quot; ELSE &quot;&quot; END) + (IF SUM([ChangePP]) &lt;&gt; 0 AND ROUND(ABS(SUM([ChangePP])),1) = 0 THEN &quot;&lt;0.1&quot; ELSE STR(ROUND(ABS(SUM([ChangePP])),1)) END) + &quot; pp&quot; END)" />
             </column>
-            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Earlier cover (%)" datatype="real" name="[EarlierShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[StartEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0&quot;%&quot;">
+            <column caption="Later cover (%)" datatype="real" name="[LaterShare]" role="measure" type="quantitative" default-format="0.0####&quot;%&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] END" />
             </column>
-            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0&quot; pp&quot;;-0.0&quot; pp&quot;;0.0&quot; pp&quot;">
+            <column caption="Change (percentage points)" datatype="real" name="[ChangePP]" role="measure" type="quantitative" default-format="+0.0####&quot; pp&quot;;-0.0####&quot; pp&quot;;0.0&quot; pp&quot;">
               <calculation class="tableau" formula="IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] ELSEIF [epoch_label] = [Parameters].[StartEpoch] THEN -[share_pct] END" />
             </column>
             <column caption="Cover share (%) / baseline change (pp)" datatype="real" name="[TrendValue]" role="measure" type="quantitative">
@@ -18075,6 +18075,7 @@
             <format attr="mark-labels-show" value="true" />
           </style-rule>
           <style-rule element="axis">
+            <format attr="title" class="0" field="[federated.landcover].[sum:ChangePP:qk]" scope="cols" value="Change (percentage points)" />
             <encoding attr="space" class="0" field="[federated.landcover].[sum:ChangePP:qk]" field-type="quantitative" max="100.0" min="-100.0" major-origin="0.0" major-spacing="50.0" minor-show="false" range-type="fixed" scope="cols" type="space" />
           </style-rule>
         </style>
@@ -18119,7 +18120,7 @@
         <rows>[federated.landcover].[none:AreaSeries:nk]</rows>
         <cols>[federated.landcover].[sum:ChangePP:qk]</cols>
       </table>
-      <simple-id uuid="{0375CC44-81F3-403D-B1CB-0EDEB7819F69}" />
+      <simple-id uuid="{6F3BD47B-5252-4F70-BD02-496B33B261C5}" />
     </worksheet>
   </worksheets>
   <dashboards>
@@ -22537,8 +22538,7 @@
           </zone>
           <zone id="6" x="1017" y="43065" w="61356" h="2742" type-v2="text">
             <formatted-text>
-              <run fontsize="14" bold="true" fontname="Segoe UI" fontcolor="#203c32">02   Land cover composition | </run>
-              <run fontsize="14" bold="true" fontname="Segoe UI" fontcolor="#203c32">&lt;[Parameters].[FocusArea]&gt;</run>
+              <run fontsize="14" bold="true" fontname="Segoe UI" fontcolor="#203c32">02   Land cover composition | main area</run>
             </formatted-text>
             <zone-style>
               <format attr="background-color" value="#f7f6f1" />
@@ -22655,7 +22655,7 @@
           </zone>
         </zone>
       </zones>
-      <simple-id uuid="{C4C10BEF-069E-4502-A4FB-27EF0B2605F7}" />
+      <simple-id uuid="{743C6989-DEEF-4492-810D-D787DB7DC7C2}" />
     </dashboard>
   </dashboards>
   <windows source-height="30">
@@ -22680,7 +22680,7 @@
           </strip>
         </edge>
       </cards>
-      <simple-id uuid="{076C4F9C-7FB9-4854-B16A-2266B6C45A34}" />
+      <simple-id uuid="{A9CE04C2-4330-46AC-8DD4-086AA76A011C}" />
     </window>
     <window class="worksheet" name="T02_ClassTrajectories">
       <cards>
@@ -22703,7 +22703,7 @@
           </strip>
         </edge>
       </cards>
-      <simple-id uuid="{F046B067-A614-455B-9B77-EE71AD0231A5}" />
+      <simple-id uuid="{98FCF937-C456-488B-9F13-048C3518BB7C}" />
     </window>
     <window class="worksheet" name="T04_NetChange">
       <cards>
@@ -22726,7 +22726,7 @@
           </strip>
         </edge>
       </cards>
-      <simple-id uuid="{AB01950B-4357-455A-B051-DE49A927FCBC}" />
+      <simple-id uuid="{75075157-5A5C-4A6B-A272-00264475ABB5}" />
     </window>
     <window class="dashboard" maximized="true" name="LandscapeChange">
       <viewpoints>
@@ -22741,7 +22741,7 @@
         </viewpoint>
       </viewpoints>
       <active id="-1" />
-      <simple-id uuid="{9582BD42-C64D-4161-A1BC-176CA9543756}" />
+      <simple-id uuid="{5CA38CB7-8510-4F89-9D2C-495CB5D87CF4}" />
     </window>
   </windows>
   <datagraph>
@@ -22755,7 +22755,7 @@
       </node-execution-subgraphs>
       <nodes>
         <single-value-field-node fieldname="[Parameters].[TrendMode]" fieldname-input-guid="3c7ee83e-96ff-48fa-adb0-48787ac40149" node-guid="8ce33efa-0623-406b-86dc-5a17280ad9fd" value-output-guid="77f7017d-6db4-4ec5-b4e7-bf889c011111" />
-        <axis-title-node duplicate-index="0" fieldname="[federated.landcover].[sum:TrendValue:qk]" node-guid="d2cc8255-a863-4f28-98c9-7e75ba1c1c12" orientation="vertical" sheet-identifier="{C5928A22-2FD4-417C-B0FA-91098B7EBAAD}" title-input-guid="619e1bff-3974-44f7-91c1-1166e9d154f0" />
+        <axis-title-node duplicate-index="0" fieldname="[federated.landcover].[sum:TrendValue:qk]" node-guid="d2cc8255-a863-4f28-98c9-7e75ba1c1c12" orientation="vertical" sheet-identifier="{8A8D8A7F-A491-486E-A070-21727F482DDF}" title-input-guid="619e1bff-3974-44f7-91c1-1166e9d154f0" />
       </nodes>
       <edges>
         <edge from="77f7017d-6db4-4ec5-b4e7-bf889c011111" to="619e1bff-3974-44f7-91c1-1166e9d154f0" />

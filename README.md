@@ -12,11 +12,7 @@ From this project's root:
 shiny::runApp()
 ```
 
-The local application ZIP includes `data/smp_cache.rds`, original boundaries, and prepared land cover summaries. It needs no raster processing or online map tiles to run. When cloning this repository, prepare the spatial cache first:
-
-```sh
-Rscript scripts/prepare_data.R
-```
+The application ZIP includes `data/smp_cache.rds`, original boundaries, and prepared land cover summaries. It needs no raster processing or online map tiles to run. The spatial cache is excluded from Git. When using a Git clone, copy `data/smp_cache.rds` from the matching submission ZIP into the clone. Keep the supplied original boundaries and land cover release together. Downloading a new SMP snapshot is a source refresh, rather than a substitute for the frozen cache, and can require the complete rebuild below.
 
 The prepared land cover release is tied to the frozen original boundaries. Startup verifies their fingerprint. A different spatial-cache hash is accepted only after matching area IDs and source attributes and checking display geometry against the frozen boundaries to within 0.01 metre. Retrieval metadata and RDS serialization therefore do not force an unnecessary raster rebuild. If boundaries actually change, restore the matching snapshot or rebuild the land cover summaries and Tableau input together.
 
@@ -31,7 +27,7 @@ Selections and pins are shared across the two workspaces. Land cover statistics 
 
 ## Sources and processing
 
-SMP4 boundaries and action attributes come from [DEECA's summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). The frozen local snapshot was retrieved **22 October 2026**, and the model is associated with July 2023. It has 1,053 boundaries and 12,403 action records. The priority map uses only `CE_RANK`. Source `AREA_5` and `AREA_20` are retained in comparison downloads, alongside derived shares, but are not visualised in the interface. `AREA_20` follows NatureKit's **top 15%** label; the top 5% is included within it. Missing action records are not zeros. Unit 925 has no SMP action records.
+SMP4 boundaries and action attributes come from [DEECA's summary-area service](https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/NatureKit/SMP4_summary_areas/MapServer). The frozen local snapshot was retrieved **21 October 2026**, and the model is associated with July 2023. It has 1,053 boundaries and 12,403 action records. The priority map uses only `CE_RANK`. Source `AREA_5` and `AREA_20` are retained in comparison downloads, alongside derived shares, but are not visualised in the interface. `AREA_20` follows NatureKit's **top 15%** label; the top 5% is included within it. Missing action records are not zeros. Unit 925 has no SMP action records.
 
 [Victorian Land Cover Time Series](https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series) supplies seven classified 25 m GeoTIFFs. Downloaded filenames and raster attribute tables use **1985-1990** for the first epoch, although the catalogue describes it as 1987-1990. The app follows the downloaded files. These are multiple year epochs ending in 2019, not annual or current observations.
 
@@ -42,6 +38,7 @@ Class share divides class area by classified area, codes 1-19, within each unit/
 For a reproducible full resolution rebuild, also install `terra`, `exactextractr` and `foreign`, then run:
 
 ```sh
+Rscript scripts/prepare_data.R --refresh
 Rscript scripts/prepare_landcover.R --refresh
 Rscript scripts/prepare_tableau.R
 python3 scripts/build_tableau.py
@@ -64,8 +61,8 @@ python3 tests/check_tableau.py
 python3 scripts/package_submission.py
 ```
 
-See `docs/VALIDATION.md` for current evidence. The package builder produces `dist/Victoria_Landscape_Atlas.zip`, including code, prepared data, original geometry and the workbook. R packages must already be installed. It excludes raw rasters, archived versions, credentials and Git metadata.
+The package builder produces `dist/Victoria_Landscape_Atlas.zip`, including code, prepared data, original geometry, the workbook, source notes and rebuild/check scripts. R packages must already be installed. It excludes raw rasters, archived versions, planning history, previous QA images, credentials and Git metadata. ZIP paths use forward slashes for extraction on other operating systems. `PACKAGE_SHA256.json` records every included file. The design summary, pattern/use case report and video are separate assessment deliverables and are not supplied by this ZIP.
 
-The old PDF activity data and progress workbook are preserved under `archive/progress/` for history. They are not read by the active app or revised Tableau views.
+Browser checks require a separately installed Playwright and browser. Set `RSCRIPT` to an Rscript executable, `PLAYWRIGHT_MODULE` to the Playwright module if necessary, and `QA_BROWSER` to an installed channel such as `msedge`, then run `node tests/browser_check.cjs`. Results go to a temporary folder, or the folder specified by `QA_OUTPUT`.
 
 Attribution: State of Victoria, Department of Energy, Environment and Climate Action. Land cover data are provided under CC BY 4.0. SMP4 remains subject to its own source terms. Modelled opportunities do not prove completed work or recovery; land cover classes do not measure habitat quality, species abundance or management effectiveness. Net class totals do not establish pixel transitions or causes of change.

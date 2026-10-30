@@ -16,10 +16,12 @@ document.addEventListener('click', function(e) {
   const nav = e.target.closest('[data-page]');
   if (nav) {
     document.querySelectorAll('.atlas-page').forEach(el => {el.hidden = el.id !== 'page-' + nav.dataset.page;});
-    document.querySelectorAll('[data-page]').forEach(el => {
-      el.classList.toggle('active', el === nav);
-      if (el === nav) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current');
+    document.querySelectorAll('.masthead [data-page]').forEach(el => {
+      const active = el.dataset.page === nav.dataset.page;
+      el.classList.toggle('active', active);
+      if (active) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current');
     });
+    window.scrollTo({top:0,behavior:'instant'});
     window.dispatchEvent(new Event('resize'));
     if (window.Shiny) Shiny.setInputValue('page',nav.dataset.page,{priority:'event'});
   }

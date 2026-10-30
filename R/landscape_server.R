@@ -94,7 +94,7 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   # Retain comparisons for each area separately because the source units can overlap.
   comparison<-reactive({p<-valid_period();landcover_change(d,shown_ids(),p$from,p$to,chosen_class())})
   all_changes<-reactive({p<-valid_period();landcover_change(d,selected(),p$from,p$to)})
-  fmt<-function(v,suffix='',digits=1) ifelse(is.na(v),'No classified coverage',paste0(number(v,digits),suffix))
+  fmt<-format_measure
   output$land_history_context<-renderUI({
     ids<-setdiff(shown_ids(),selected())
     tagList(
@@ -111,8 +111,8 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
       div(class='land-endpoints',
         div(p(class='detail-label',paste('Earlier:',display_text(e$epoch_label[match(r$start_epoch,e$epoch_id)]))),p(class='land-share',fmt(r$share_pct_start,'%'))),
         div(p(class='detail-label',paste('Later:',display_text(e$epoch_label[match(r$end_epoch,e$epoch_id)]))),p(class='land-share',fmt(r$share_pct_end,'%')))),
-      p(class='land-net-change',paste('Change:',fmt(r$change_pp,' percentage points'))),
-      p(class='caption',paste('Change in mapped area:',fmt(r$change_ha,' hectares'))),
+      p(class='land-net-change',paste('Change:',fmt(r$change_pp,' percentage points',zero_tolerance=1e-8))),
+      p(class='caption',paste('Change in mapped area:',fmt(r$change_ha,' hectares',zero_tolerance=1e-8))),
       p(class='caption','Percentages describe land mapped as this cover type among the land the source could classify.'),
       tags$details(tags$summary('Data coverage and management context'),
         p(class='caption',paste('Classified land:',fmt(r$coverage_pct_start,'%'),'in the earlier period;',fmt(r$coverage_pct_end,'%'),'in the later period. Unclassified or missing land is excluded from cover percentages.')),
@@ -127,7 +127,7 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
     tags$caption(caption),tags$thead(tags$tr(lapply(c('Area','Cover type','Earlier cover (%)','Later cover (%)','Change (percentage points)','Change (hectares)'),function(t) tags$th(scope='col',t)))),
     tags$tbody(lapply(seq_len(nrow(x)),function(i) tags$tr(
       tags$th(scope='row',unit_name(x$microID[i])),tags$td(display_text(x$class_label[i])),
-      tags$td(fmt(x$share_pct_start[i])),tags$td(fmt(x$share_pct_end[i])),tags$td(fmt(x$change_pp[i])),tags$td(fmt(x$change_ha[i]))))))
+      tags$td(fmt(x$share_pct_start[i])),tags$td(fmt(x$share_pct_end[i])),tags$td(fmt(x$change_pp[i],zero_tolerance=1e-8)),tags$td(fmt(x$change_ha[i],zero_tolerance=1e-8))))))
   output$land_comparison<-renderUI(make_table(comparison(),paste(display_text(class_label()),'/',period_label(),'/ each area shown separately')))
   # Compare all cover types in the main area using either hectares or percentage points.
   output$class_changes<-renderPlot({
@@ -143,7 +143,7 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
       ggplot2::labs(x=if((input$change_unit %||% 'pp')=='ha') 'Change in mapped area (projected hectares)' else 'Change in cover share (percentage points)',y=NULL,
         subtitle=paste(unit_name(selected()),'/',period_label()))+chart_theme()+
       ggplot2::theme(axis.text.y=ggplot2::element_text(size=10),panel.grid.major.y=ggplot2::element_blank())
-  },res=110,alt='Change between the chosen periods for all 19 cover types in the selected area. Right and green indicate an increase; left and brown indicate a decrease. Exact values are in the tables.')
+  },res=110,alt='Change between the chosen periods for all 19 cover types in the selected area. Right and green indicate an increase; left and brown indicate a decrease. Values are available in the tables and download.')
   # Draw a local history chart that remains usable when the online workbook is unavailable.
   output$land_trends<-renderPlot({
     x<-d$landcover$summary;x<-x[x$microID %in% shown_ids() & x$class_code==chosen_class(),]
@@ -180,7 +180,8 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
       p(class='caption tableau-width-hint','On a narrow window, scroll the chart panel sideways to see all controls.'),
       tags$details(class='tableau-help',tags$summary('Trouble viewing the dashboard?'),
         p('Use Retry Tableau above to reload the embedded view. A separate tab is available if your viewer blocks the embedded dashboard.'),
-        tags$a(href=config$url,target='_blank',rel='noopener','Open a separate Tableau tab')))
+        tags$a(href=config$url,target='_blank',rel='noopener','Open a separate Tableau tab'),
+        downloadButton('download_tableau','Download Tableau workbook')))
     else div(class='empty-state',role='status',h3('Explore the interactive workbook'),
       p('Download and open the workbook in Tableau. Area, cover type and period selections are linked through this app when the online dashboard is available.'),
       if(config$configured) p('The online dashboard is currently unavailable. Download the workbook or explore the charts below.'),

@@ -5,6 +5,9 @@ checks <- 0L
 check <- function(condition,label) {stopifnot(condition);checks <<- checks+1L;cat('PASS',label,'\n')}
 check(nrow(d$areas)==1053,'snapshot area count')
 check(nrow(d$actions)==12403,'snapshot action count')
+check(identical(format_measure(c(0,.00012,-.00012,1.24,NA),'%'),c('0.0%','<0.1%','-<0.1%','1.2%','No classified coverage')),'small nonzero values remain distinct from zero and missing data')
+check(identical(format_measure(c(-1e-11,1e-11),zero_tolerance=1e-8),c('0.0','0.0')) && format_measure(1e-11)=='<0.1','change formatting suppresses numerical residuals without erasing small source percentages')
+check(setequal(names(action_labels),unique(d$actions$Action)),'all management action controls retain their source identifiers')
 check(!anyDuplicated(paste(d$actions$microID,d$actions$Action)),'unique area/action grain')
 check(all(d$actions$microID %in% d$areas$microID),'complete action-to-boundary join')
 check(all(sf::st_is_valid(d$areas)) && !any(sf::st_is_empty(d$areas)),'valid nonempty display geometry')
@@ -21,6 +24,7 @@ shiny::testServer(atlas_server(d), {
   check(grepl('Selected action: Fox control',detail) && !grepl('Top 5%|Top 15%|Area extent in top ranks',paste(detail,grid)), 'priority detail and action grid contain rank and hectares without threshold categories')
   check(grepl('Source rank range: 16 to 98',detail),'source rank range retains a readable separator')
   session$setInputs(area='unit925',pin=1)
+  check(identical(shown_ids()[1],'unit925'),'main area comes first in tables and local chart colour slots')
   check(nrow(focus())==0 && 'unit925' %in% pins(),'missing unit can be selected and compared')
   session$setInputs(area='unit1',pin=2)
   check(length(pins())==3 && !('unit1' %in% pins()),'three-area pin limit')
@@ -96,8 +100,10 @@ if(requireNamespace('terra',quietly=TRUE) && requireNamespace('exactextractr',qu
     actual<-setNames(z$count*.0625,as.character(code));prepared<-expected$area_ha[match(code,expected$class_code)]
     check(all(abs(actual-prepared)<.002,na.rm=TRUE),'real Unit 668 class areas agree with independent terra exact extraction within 20 square metres')
   }
-}
+} else cat('SKIP optional preparation fixtures and raw raster re-extraction: terra and exactextractr are both required.\n')
 check(t$limit>=max(abs(t$values),na.rm=TRUE) && t$limit>=1,'change map uses a labelled symmetric range covering all units')
+tiny_map<-landcover_map_spec(d,1,'1985_1990','2015_2019','share')
+check(grepl('<0.1%',tiny_map$formatted[match('unit668',d$areas$microID)],fixed=TRUE),'map tooltip preserves small nonzero cover')
 source('R/landscape_ui.R');source('R/ui.R')
 html<-as.character(atlas_ui(d))
 check(grepl('Explore landscape change',html) && !grepl('Review progress|Reported management|Target ha',html),'new navigation and sources replace the PDF core')

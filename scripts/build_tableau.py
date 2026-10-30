@@ -41,7 +41,11 @@ calcs={
  'FocusMatch':('boolean','[microID] = [Parameters].[FocusArea]'),
  'FocusViewMatch':('boolean','[Parameters].[FocusView] <> "Selected cover type" OR [class_label] = [Parameters].[LandClass]'),
  'DisplayClass':('string','IF [Parameters].[FocusView] <> "Grouped overview" THEN TRIM(REPLACE([class_label]," - "," ")) ELSE CASE [class_code] WHEN 1 THEN "Developed / disturbed" WHEN 2 THEN "Developed / disturbed" WHEN 3 THEN "Developed / disturbed" WHEN 4 THEN "Agriculture" WHEN 5 THEN "Agriculture" WHEN 8 THEN "Agriculture" WHEN 7 THEN "Plantations / exotic trees" WHEN 15 THEN "Plantations / exotic trees" WHEN 6 THEN "Plantations / exotic trees" WHEN 14 THEN "Natural low cover" WHEN 17 THEN "Open water" WHEN 9 THEN "Wetland vegetation" WHEN 16 THEN "Wetland vegetation" WHEN 18 THEN "Wetland vegetation" WHEN 19 THEN "Wetland vegetation" ELSE "Other native vegetation" END END'),
- 'ChangeLabel':('string','STR(ROUND(SUM([EarlierShare]),1)) + "% to " + STR(ROUND(SUM([LaterShare]),1)) + "%   |   " + IF ROUND(SUM([ChangePP]),1) > 0 THEN "+" ELSE "" END + STR(ROUND(SUM([ChangePP]),1)) + " pp"'),
+ 'ChangeLabel':('string',
+   '(IF SUM([EarlierShare]) > 0 AND ROUND(SUM([EarlierShare]),1) = 0 THEN "<0.1%" ELSE STR(ROUND(SUM([EarlierShare]),1)) + "%" END) + " to " + '
+   '(IF SUM([LaterShare]) > 0 AND ROUND(SUM([LaterShare]),1) = 0 THEN "<0.1%" ELSE STR(ROUND(SUM([LaterShare]),1)) + "%" END) + "   |   " + '
+   '(IF ABS(SUM([ChangePP])) < 0.00000001 THEN "0.0 pp" ELSE (IF SUM([ChangePP]) > 0 THEN "+" ELSEIF SUM([ChangePP]) < 0 THEN "-" ELSE "" END) + '
+   '(IF SUM([ChangePP]) <> 0 AND ROUND(ABS(SUM([ChangePP])),1) = 0 THEN "<0.1" ELSE STR(ROUND(ABS(SUM([ChangePP])),1)) END) + " pp" END)'),
  'EarlierShare':('real','IF [epoch_label] = [Parameters].[StartEpoch] THEN [share_pct] END'),
  'LaterShare':('real','IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] END'),
  'ChangePP':('real','IF [epoch_label] = [Parameters].[EndEpoch] THEN [share_pct] ELSEIF [epoch_label] = [Parameters].[StartEpoch] THEN -[share_pct] END'),
@@ -69,8 +73,8 @@ def parameter(key, members=True):
 def column(key):
  dtype=fields.get(key,calcs.get(key,('string',))[0]);numeric=dtype in ['real','integer']
  e=E.Element('column',{'caption':{'AreaSeries':'Area','share_pct':'Cover (%)','unit_label':'Area','epoch_label':'Historical period','class_label':'Cover type','microID':'Area ID','EpochDisplay':'Period','DisplayClass':'Cover group / class','ChangePP':'Change (percentage points)','EarlierShare':'Earlier cover (%)','LaterShare':'Later cover (%)','TrendValue':'Cover share (%) / baseline change (pp)','IntervalRole':'Period being compared','area_ha':'Land covered (hectares)','coverage_pct':'Area with classified data (%)','unclassified_area_ha':'Unclassified land (hectares)','nodata_area_ha':'Missing data (hectares)'}.get(key,key.replace('_',' ').capitalize()),'datatype':dtype,'name':f'[{key}]','role':'measure' if numeric else 'dimension','type':'quantitative' if numeric else 'nominal'})
- if key in ['EarlierShare','LaterShare']:e.set('default-format','0.0"%"')
- if key=='ChangePP':e.set('default-format','+0.0" pp";-0.0" pp";0.0" pp"')
+ if key in ['EarlierShare','LaterShare']:e.set('default-format','0.0####"%"')
+ if key=='ChangePP':e.set('default-format','+0.0####" pp";-0.0####" pp";0.0" pp"')
  if key in ['area_ha','valid_area_ha','unclassified_area_ha','nodata_area_ha']:e.set('default-format','#,##0.0')
  if key=='ChangeLabel':e.set('role','measure')
  if key in calcs:sub(e,'calculation',**{'class':'tableau','formula':calcs[key][1]})
@@ -156,6 +160,7 @@ def sheet(name,title,filters,mark,rows,cols,colour,lod=(),fixed_axis=True):
   rule=sub(style,'style-rule',element='mark');sub(rule,'format',attr='mark-labels-show',value='true')
  if name=='T04_NetChange':
   axis=sub(style,'style-rule',element='axis')
+  sub(axis,'format',attr='title',**{'class':'0','field':ref('ChangePP'),'scope':'cols','value':'Change (percentage points)'})
   sub(axis,'encoding',attr='space',**{'class':'0','field':ref('ChangePP'),'field-type':'quantitative','max':'100.0','min':'-100.0','major-origin':'0.0','major-spacing':'50.0','minor-show':'false','range-type':'fixed','scope':'cols','type':'space'})
   for k in ['EarlierShare','LaterShare','ChangePP']:sub(enc,'tooltip',column=ref(k))
   sub(enc,'text',column=ref('ChangeLabel'))
@@ -210,7 +215,7 @@ control(18,'TrendMode',820,96,342)
 paint(zone(21,18,166,930,300,name='T02_ClassTrajectories',**{'show-title':'false'}),margin=6)
 paint(zone(41,966,166,196,300,'color',name='T02_ClassTrajectories',param=ref('AreaSeries')),margin=6)
 textzone(5,12,476,1156,30,'Baseline change is measured from each area\'s first period. All seven periods stay visible.',10,ink='#5b675e')
-parametertext(6,12,534,724,34,[('text','02   Land cover composition | '),('param','FocusArea')],14,True)
+textzone(6,12,534,724,34,'02   Land cover composition | main area',14,True)
 control(14,'FocusView',820,512,342)
 paint(zone(20,18,584,806,254,name='T01_Composition',**{'show-title':'false'}),margin=6)
 paint(zone(40,842,584,320,254,'color',name='T01_Composition',param=ref('DisplayClass')),margin=6)

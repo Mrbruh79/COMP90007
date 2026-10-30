@@ -19,6 +19,15 @@ rank_legend <- function() htmltools::HTML(paste0(
   '<div class="rank-ticks"><span>0</span><span>50</span><span>100</span></div>',
   '<div class="rank-missing"><i></i>No action record</div>'))
 number <- function(x, digits=0) format(round(x,digits),big.mark=',',trim=TRUE,scientific=FALSE,nsmall=digits)
+# Keep small measured values distinct from exact zero at the displayed precision.
+format_measure <- function(value, suffix='', digits=1, zero_tolerance=0) {
+  value[!is.na(value) & abs(value)<zero_tolerance] <- 0
+  label <- paste0(number(value,digits),suffix)
+  tiny <- !is.na(value) & value != 0 & round(abs(value),digits)==0
+  label[tiny] <- paste0(ifelse(value[tiny]<0,'-',''),'<',number(10^-digits,digits),suffix)
+  label[is.na(value)] <- 'No classified coverage'
+  label
+}
 unit_name <- function(id) paste('Unit',sub('unit','',id,fixed=TRUE))
 # Load the saved spatial snapshot and verify its compatibility with the land cover release.
 # Source action values are retained; missing records remain missing.
@@ -44,7 +53,7 @@ map_spec <- function(d, action) {
 }
 map_legend <- function(s) htmltools::HTML(paste0('<strong>',s$label,'</strong>',
   '<div class="rank-gradient" role="img" aria-label="Pale to dark green from zero to ',number(s$limit),' ',s$unit,'"></div>',
-  '<div class="rank-ticks"><span>0 · Lower</span><span>',number(s$limit/2),'</span><span>',number(s$limit),' · Higher</span></div>',
+  '<div class="rank-ticks"><span>0 \u00b7 Lower</span><span>',number(s$limit/2),'</span><span>',number(s$limit),' \u00b7 Higher</span></div>',
   '<div class="rank-missing"><i></i>No action record</div>'))
 # Accept only the expected Tableau Public dashboard URL.
 tableau_config <- function(path='config/app.json') {

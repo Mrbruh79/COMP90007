@@ -17,6 +17,18 @@ const params=()=>[...Object.entries(PARAMETERS).map(([k,name])=>({name,currentVa
  const broken=new LandscapeBridge({activeSheet:{worksheets:[{...sheet,getFiltersAsync:async()=>{throw Error('filter query failed')}}]},getParametersAsync:async()=>params()},()=>{});
  await assert.rejects(broken.connect('release1'),/filter query failed/);
  console.log('PASS stale area filter cleared on load and selection change; analytical filters preserved');
+ const events=new LandscapeBridge({getParametersAsync:async()=>params(),changeParameterValueAsync:async()=>{}},()=>{});
+ await events.connect('release1');await events.update(base);
+ let resolveEvent;
+ const delayed=events.readParameterChange(()=>new Promise(resolve=>{resolveEvent=resolve}));
+ await events.update({...base,class:'Water'});
+ resolveEvent({name:'Cover type',currentValue:{value:'Built environment'}});
+ assert.equal(await delayed,null);assert.equal(events.desired.class,'Water');
+ assert.equal(await events.readParameterChange(async()=>({name:'Cover type',currentValue:{value:'Water'}})),null);
+ const genuine=await events.readParameterChange(async()=>({name:'Cover type',currentValue:{value:'Built environment'}}));
+ assert.equal(genuine.value,'Built environment');assert.equal(events.desired.class,'Built environment');
+ assert.equal(await events.readParameterChange(async()=>({name:'Composition view',currentValue:{value:'All cover types'}})),null);
+ console.log('PASS delayed Tableau events cannot replace newer Shiny selection; own echoes ignored and genuine external changes retained');
  const calls=[],states=[];let release;
  const client={getParametersAsync:async()=>params(),changeParameterValueAsync:async(name,value)=>{calls.push([name,value]);if(value==='unit1')await new Promise(r=>release=r)}};
  const b=new LandscapeBridge(client,(state)=>states.push(state));

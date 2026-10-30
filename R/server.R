@@ -7,7 +7,7 @@ atlas_server <- function(d) function(input, output, session) {
   selected <- reactive({req(input$area %in% d$areas$microID); input$area})
   chosen_action <- reactive({req(input$action %in% names(action_labels));input$action})
   focus <- reactive(action_row(d,selected(),chosen_action()))
-  shown_ids <- reactive(unique(c(pins(),selected())))
+  shown_ids <- reactive(unique(c(selected(),pins())))
   # Limit the comparison to three pins and avoid duplicate areas.
   observeEvent(input$pin, {
     id <- selected()
@@ -93,7 +93,7 @@ atlas_server <- function(d) function(input, output, session) {
         p(class='caption',paste('Higher ranks indicate stronger expected benefits relative to cost for',paste0(tolower(action_labels[[chosen_action()]]),'.'))),
         p(class='detail-label','Relevant land for this action'),div(class='area-value',number(r$AREA_TOT),span(' ha')),
         p(class='caption','Relevant hectares as reported by the source. One hectare is 10,000 square metres.'),
-        tags$details(tags$summary('Evidence for this selection'),p('The government supplies the median cost effectiveness rank for this area and action. It is a relative ranking, not an area’s position in a numbered list or a percentage chance of success.'),p(paste('Source rank range:',display_text(gsub('[-\u2013\u2014]', ' to ', r$CE_RANGE)))),
+        tags$details(tags$summary('Evidence for this selection'),p('The government supplies the median cost effectiveness rank for this area and action. It is a relative ranking, not an area\u2019s position in a numbered list or a percentage chance of success.'),p(paste('Source rank range:',display_text(gsub('[-\u2013\u2014]', ' to ', r$CE_RANGE)))),
           p('This is a source range, not a confidence interval.'),p(paste('Snapshot:',format(as.Date(d$retrieved),'%d %B %Y'))),
           tags$a(href=paste0('https://bio-prd-naturekit-public-data.s3-ap-southeast-2.amazonaws.com/smp-reports/summary_areas_v4/SMPreport_Summary_',selected(),'.html'),target='_blank',rel='noopener','Open official area report'),p('Report values may differ from this service snapshot.'))))
   })
@@ -105,7 +105,7 @@ atlas_server <- function(d) function(input, output, session) {
       tags$thead(tags$tr(tags$th(scope='col','Area'),lapply(acts,function(a) tags$th(scope='col',class=if(a==chosen_action()) 'active-action' else '',action_labels[[a]])))),
       tags$tbody(lapply(ids,function(id) tags$tr(tags$th(scope='row',unit_name(id)),lapply(acts,function(a) {
         r <- action_row(d,id,a);v <- if(nrow(r)) r$CE_RANK else NA_real_
-        label <- paste(unit_name(id),a,if(is.na(v)) 'No action record' else paste('rank',v,';',number(r$AREA_TOT),'relevant ha'),sep='; ')
+        label <- paste(unit_name(id),action_labels[[a]],if(is.na(v)) 'No action record' else paste('rank',v,';',number(r$AREA_TOT),'relevant ha'),sep='; ')
         tags$td(class=if(a==chosen_action()) 'active-action' else '',
           tags$button(type='button',class=paste('heat-cell',if(is.na(v)) 'missing' else ''),`data-area`=id,`data-action`=a,
             style=paste0('background:',rank_colour(v),';color:',cell_text_colour(rank_colour(v))),
