@@ -1,5 +1,19 @@
 (function (root) {
   const PARAMETERS = {focus:'Main area',compare1:'Additional area 1 (optional)',compare2:'Additional area 2 (optional)',compare3:'Additional area 3 (optional)',class:'Cover type',start:'Earlier period',end:'Later period'};
+  async function clearSavedAreaFilters(workbook) {
+    const sheet = workbook.activeSheet?.worksheets?.find(sheet => sheet.name === 'T04_NetChange');
+    if (!sheet) return;
+    // Published copies can retain a manual area selection from Desktop.
+    // Area membership comes from the shared parameters, so remove that extra restriction.
+    // The class, comparison and endpoint calculation filters remain in place.
+    for (const filter of await sheet.getFiltersAsync()) {
+      const isArea = /:(AreaSeries|unit_label|microID):/.test(filter.fieldId || '');
+      // Clear even when the client reports all values selected; that flag can
+      // briefly describe the previous state after a manual filter interaction.
+      if (isArea && filter.filterType === 'categorical')
+        await sheet.clearFilterAsync(filter.fieldName);
+    }
+  }
   class LandscapeBridge {
     constructor(client, report) {
       this.client = client; this.report = report; this.desired = null;
@@ -14,6 +28,8 @@
         this.applied[name] = found[name];
       }
       if (this.closed) return;
+      await clearSavedAreaFilters(this.client);
+      if (this.closed) return;
       this.ready = true;
       await this.flush();
     }
@@ -22,8 +38,10 @@
       if (!this.ready || this.busy || this.closed || !this.desired) return;
       this.busy = true;
       try {
-        if (Object.entries(PARAMETERS).some(([key,name]) => this.desired[key] !== undefined && this.applied[name] !== this.desired[key]))
+        if (Object.entries(PARAMETERS).some(([key,name]) => this.desired[key] !== undefined && this.applied[name] !== this.desired[key])) {
           this.report('syncing', 'Updating chart selection...');
+          await clearSavedAreaFilters(this.client);
+        }
         while (!this.closed && this.desired) {
           const next = {...this.desired};
           for (const [key, name] of Object.entries(PARAMETERS)) {

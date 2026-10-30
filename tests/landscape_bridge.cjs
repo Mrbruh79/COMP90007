@@ -3,6 +3,20 @@ const {LandscapeBridge,PARAMETERS}=require('../www/tableau.js');
 const base={focus:'unit668',compare1:'unit375',compare2:'',compare3:'',class:'Treed native vegetation',start:'1985-1990',end:'2015-2019'};
 const params=()=>[...Object.entries(PARAMETERS).map(([k,name])=>({name,currentValue:{value:base[k]}})),{name:'Data release',currentValue:{value:'release1'}}];
 (async()=>{
+ const filters=['AreaSeries','ClassMatch','CompareMatch','EndpointMatch'].map(field=>({fieldId:`[federated.landcover].[none:${field}:nk]`,fieldName:field==='AreaSeries'?'Area':field,filterType:'categorical',isAllSelected:false}));
+ const cleared=[];
+ const sheet={name:'T04_NetChange',getFiltersAsync:async()=>filters,clearFilterAsync:async name=>{cleared.push(name);filters.find(f=>f.fieldName===name).isAllSelected=true;}};
+ const guarded=new LandscapeBridge({activeSheet:{worksheets:[sheet]},getParametersAsync:async()=>params(),changeParameterValueAsync:async()=>{}},()=>{});
+ await guarded.connect('release1');assert.deepEqual(cleared,['Area']);
+ assert(filters.slice(1).every(f=>!f.isAllSelected));
+ // A new manual restriction must also be cleared before changing the focus.
+ // The API can still report all selected while its rendered filter changes.
+ filters[0].isAllSelected=true;await guarded.update({...base,focus:'unit925'});
+ assert.deepEqual(cleared,['Area','Area']);
+ await guarded.update({...base,focus:'unit925'});assert.equal(cleared.length,2);
+ const broken=new LandscapeBridge({activeSheet:{worksheets:[{...sheet,getFiltersAsync:async()=>{throw Error('filter query failed')}}]},getParametersAsync:async()=>params()},()=>{});
+ await assert.rejects(broken.connect('release1'),/filter query failed/);
+ console.log('PASS stale area filter cleared on load and selection change; analytical filters preserved');
  const calls=[],states=[];let release;
  const client={getParametersAsync:async()=>params(),changeParameterValueAsync:async(name,value)=>{calls.push([name,value]);if(value==='unit1')await new Promise(r=>release=r)}};
  const b=new LandscapeBridge(client,(state)=>states.push(state));

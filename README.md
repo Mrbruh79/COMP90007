@@ -53,7 +53,7 @@ The preparation script downloads the 426,746,271-byte official ZIP if absent. Se
 
 The user-published `https://public.tableau.com/views/Victoria_Landscape_Change/LandscapeChange` view is configured in `config/app.json`. The interactive dashboard loads within Explore landscape change. A separate-tab link is available only inside the collapsed troubleshooting section.
 
-The API v3 bridge synchronises focus, three comparison slots, class and start/end epochs and checks the exact data release. A fresh headless Edge session verified the actual published view loading inside localhost Shiny and accepting a Shiny-to-Tableau Water selection, with no JavaScript errors or failed requests. Bidirectional selection, exports, fallback rendering and laptop sizing have also been checked in local Edge sessions. RStudio Viewer and a deployed HTTPS Shiny installation have not been verified.
+The API v3 bridge synchronises focus, three comparison slots, class and start/end epochs and checks the exact data release. It clears saved manual area restrictions on the third worksheet so that the current main area and pins control the endpoint comparison. The class and period calculation filters remain active. A fresh headless Edge session verified the actual published view loading inside localhost Shiny and accepting a Shiny-to-Tableau Water selection, with no JavaScript errors or failed requests. Bidirectional selection, exports, fallback rendering and laptop sizing have also been checked in local Edge sessions. RStudio Viewer and a deployed HTTPS Shiny installation have not been verified.
 
 ## Validate and package
 
