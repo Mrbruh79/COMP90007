@@ -10,11 +10,17 @@
 /* Shared atlas controls and the embedded progress workspace. */
 #map_caption{font-size:11px;max-width:70%}.rank-legend{width:180px}.rank-legend strong{font-weight:600}
 .control-rail .checkbox{font-size:12px;margin:0 0 16px}.control-rail #zoom_area{padding:6px;font-size:12px}
-#tableau-host{border-top:1px solid var(--rule);padding-top:15px}#tableau-status{padding:10px 12px;margin:0 0 12px;background:#e8eee2;font-size:13px}
-#tableau-host[data-state='error'] #tableau-status,#tableau-host[data-state='timeout'] #tableau-status{background:#f0e6d7;border-left:3px solid var(--ochre)}
-#tableau-retry{padding:6px 12px;margin:0 18px 12px 0}#tableau-host[data-state='ready'] #tableau-retry{display:none}
-#tableau-mount:empty{display:none}#progress-viz{display:block;width:100%;min-height:850px}
-#local-evidence{border-top:1px solid var(--rule);padding-top:20px;margin-top:25px}#local-evidence>summary{font-family:Georgia,serif;font-size:23px}
+#tableau-host{max-width:1500px;margin:0 auto}
+.tableau-connection{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:44px;padding:8px 0;font-size:12px;color:var(--muted)}
+.tableau-credit{margin-right:auto}#tableau-status{font-size:12px;line-height:1.5}
+#tableau-status:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ochre);margin-right:7px}
+#tableau-host[data-state='ready'] #tableau-status:before{background:var(--forest)}
+#tableau-host[data-state='error'] #tableau-status,#tableau-host[data-state='timeout'] #tableau-status{color:#81462c}
+#tableau-retry{padding:4px 10px;font-size:12px}#tableau-host[data-state='ready'] #tableau-retry{display:none}
+.tableau-viewport{overflow-x:auto;background:var(--paper)}
+#tableau-mount{min-width:1170px;position:relative;overflow:hidden;margin:0 auto}#tableau-mount:empty{display:none}
+.tableau-width-hint{display:none;margin-top:6px}
+.tableau-help{margin-top:10px}.tableau-help>summary{font-size:12px;color:var(--muted)}
 .evidence-scroll{overflow:auto;max-height:480px}.evidence-scroll th{position:sticky;top:0;background:var(--paper)}
 #local-evidence details{margin-top:20px}.progress-grid .shiny-plot-output{max-width:100%}
 @media(max-width:850px){#map_caption{max-width:100%}}
@@ -24,9 +30,9 @@
 .landscape-controls{display:grid;grid-template-columns:1fr 1.7fr 1fr 1fr;gap:24px;border-top:1px solid var(--rule);padding:20px 0 0}
 .landscape-workspace{margin-top:10px}.land-gradient{height:10px;margin-top:8px;background:linear-gradient(to right,#edf2df,#285f47)}
 .land-gradient.diverging{background:linear-gradient(to right,#9a613b,#f7f6f1,#285f47)}.land-share{font-family:Georgia,serif;font-size:27px}.land-share span{font:14px Arial,sans-serif}
-.land-comparison-section,.land-change-section{border-top:1px solid var(--ink);margin-top:25px;padding-top:20px}.land-comparison-section{overflow-x:auto}
+.land-comparison-section{overflow-x:auto}
 .land-comparison-section .evidence-table{min-width:720px}.land-comparison-section .evidence-table td:nth-child(2),.evidence-scroll td:nth-child(2){text-align:left}
-#landscape-viz{display:block;width:100%;min-height:850px}.landscape-controls .form-group{min-width:0}.landscape-workspace .detail-rail h3{font-size:15px;text-transform:none;letter-spacing:0}
+#landscape-viz{display:block;position:absolute;top:0;left:0;transform-origin:top left}.landscape-controls .form-group{min-width:0}.landscape-workspace .detail-rail h3{font-size:15px;text-transform:none;letter-spacing:0}
 @media(max-width:1000px){.landscape-controls{grid-template-columns:1fr 1fr}.landscape-workspace{grid-template-columns:180px minmax(300px,1fr)}.landscape-workspace .detail-rail{grid-column:1/-1;border:0;border-top:1px solid var(--rule);padding:20px 0}}
 @media(max-width:600px){.landscape-controls{grid-template-columns:1fr}.landscape-workspace{display:block}.land-change-section .section-heading{display:block}}
 .landscape-controls>.shiny-input-container{width:100%;min-width:0}.landscape-controls .selectize-control{width:100%}
@@ -62,7 +68,22 @@
 .land-net-change{font-weight:600;font-size:14px}.land-directions{margin:4px 0 7px}
 #page-landscape .method-note{margin-top:28px}.land-comparison-section .evidence-table{min-width:930px}
 
-/* Give the history and exact-value sections distinct, readable headings. */
-#local-evidence>summary{font-size:26px;font-weight:700;line-height:1.35;text-decoration:none;color:var(--ink);border-bottom:1px solid var(--rule);padding-bottom:12px;margin-bottom:16px}
+/* Keep the map, historical comparison and supporting values in one reading order. */
+.landscape-steps{display:flex;gap:30px;margin:20px 0 0;padding-bottom:15px;font-size:13px}
+.landscape-steps a{text-decoration:none;border-bottom:1px solid var(--rule);padding-bottom:4px}
+.landscape-steps span{color:var(--muted);font-size:11px;margin-right:9px}
+#land-selection,#land-history,#land-evidence{scroll-margin-top:18px}
+.history-context{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:14px 28px;flex-wrap:wrap;background:var(--paper);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 0;margin:16px 0 10px}
+#land_history_context{display:flex;align-items:baseline;gap:6px 26px;flex-wrap:wrap;flex:1;min-width:0}
+.history-selection{display:flex;gap:8px 18px;flex-wrap:wrap;font-size:14px}.history-selection strong{font-weight:600}
+.history-period{font-size:13px}.history-pins{flex-basis:100%;margin:0}
+.history-edit{font-size:12px;white-space:nowrap}.history-guide{max-width:1050px}
+.land-evidence-section{border-top:1px solid var(--ink);margin:30px 0 0;padding-top:22px}
+.evidence-panel{margin:0;border-bottom:1px solid var(--rule);padding:0;font-size:13px}
+.evidence-panel>summary{font:600 15px 'Segoe UI',Arial,sans-serif;text-decoration:none;padding:18px 0;margin:0;color:var(--ink)}
+.evidence-panel[open]>summary{margin-bottom:12px}.evidence-panel .section-heading h3{margin-bottom:12px}
+.evidence-panel .evidence-scroll{margin-bottom:18px}.evidence-panel .evidence-table{margin-bottom:18px}
 #local-evidence .exact-values-heading{font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;line-height:1.35;letter-spacing:-.025em;border-top:1px solid var(--rule);padding-top:20px;margin:28px 0 12px}
 #page-landscape>.tableau-section{border-top:1px solid var(--ink);padding-top:22px;margin-top:30px}
+@media(max-width:1240px){.tableau-width-hint{display:block}}
+@media(max-width:600px){.landscape-steps{gap:12px;flex-wrap:wrap}.landscape-steps a{font-size:12px}.history-context{position:static}.history-edit{margin-left:auto}}

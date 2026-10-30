@@ -4,7 +4,7 @@
 
 Confirmed title (22 October 2026): **Mapping Conservation Priorities and Tracking Biodiversity Management in Victoria**.
 
-Audience: DEECA public servants preparing conservation briefs. Primary device: desktop, target viewport 1440 x 900 with a usable 1280 x 800 layout. Use a restrained green and charcoal palette, white plot backgrounds, consistent type and persistent source/date labels. Government logos are unnecessary; present this as a student prototype for the client.
+Audience: DEECA public servants preparing conservation briefs. Primary device: desktop, target viewport 1440 x 900 with a usable 1280 x 800 layout. Use a restrained green and charcoal palette, white plot backgrounds, consistent type and persistent source/date labels. Government logos are unnecessary; identify the client and the purpose of the atlas.
 
 Two navigation choices answer different questions:
 

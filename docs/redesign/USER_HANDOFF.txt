@@ -1,4 +1,4 @@
-I am developing a university information visualisation assignment using R Shiny and Tableau. Continue the existing project with the scope change described below.
+I am developing an information visualisation application using R Shiny and Tableau. Continue the existing project with the scope change described below.
 
 Write in plain, natural language. Do not use em dashes. Avoid generic dashboard styling. Inspect the supplied files before making changes, and distinguish implemented functionality from proposed work.
 

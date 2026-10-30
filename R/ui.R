@@ -1,12 +1,13 @@
+# Build the three workspaces and their shared navigation.
 atlas_ui <- function(d) {
   library(shiny)
   fluidPage(
-    tags$head(tags$title('Conservation priorities & land-cover change | Victoria'),
+    tags$head(tags$title('Conservation priorities & land cover change | Victoria'),
       tags$meta(name='viewport',content='width=device-width, initial-scale=1'),
-      tags$link(rel='stylesheet',href=paste0('atlas.css?v=',unname(tools::md5sum('www/atlas.css')))),tags$script(src='atlas.js'),tags$script(src='tableau.js',defer=NA)),
+      tags$link(rel='stylesheet',href=paste0('atlas.css?v=',unname(tools::md5sum('www/atlas.css')))),tags$script(src='atlas.js'),tags$script(src=paste0('tableau.js?v=',unname(tools::md5sum('www/tableau.js'))),defer=NA)),
     tags$a(href='#main',class='skip-link','Skip to content'),
     tags$header(class='masthead',
-      div(class='heading',h1('Victoria landscape atlas'),p('Mapping Conservation Priorities and Land-Cover Change in Victoria')),
+      div(class='heading',h1('Victoria landscape atlas'),p('Mapping Conservation Priorities and Land Cover Change in Victoria')),
       tags$nav(`aria-label`='Main navigation',
         tags$button(type='button',class='nav-link active',`data-page`='explore','Explore priorities'),
         tags$button(type='button',class='nav-link',`data-page`='landscape','Explore landscape change'),
@@ -38,26 +39,28 @@ atlas_ui <- function(d) {
             div(class='map-caption',textOutput('map_caption'),span('Solid outline: selected · dashed outline: pinned'))),
           tags$aside(class='detail-rail',`aria-label`='Selected area',uiOutput('area_detail'))),
         tags$section(class='heatmap-section',
-          div(class='section-heading',h2('Compare actions across areas'),p('Rows are areas; columns are actions. Higher numbers indicate stronger modelled cost-effectiveness. Select a cell to see that area and action on the map.')),
+          div(class='section-heading',h2('Compare actions across areas'),p('Rows are areas; columns are actions. Higher numbers indicate stronger modelled cost effectiveness. Select a cell to see that area and action on the map.')),
           uiOutput('heatmap'))),
+      # Keep landscape controls in their own module while sharing the same data.
       landscape_ui(d),
+      # Explain source dates, measurement units and limits alongside the product.
       div(id='page-sources',class='atlas-page reading-page',hidden=NA,
         h2('Read the evidence behind the map'),
         div(class='source-grid',
-          tags$section(h3('Modelled priorities'),p('Strategic Management Prospects version 4 compares conservation opportunities across Victoria. The app uses median cost-effectiveness ranks and hectares from DEECA\'s public summary-area service.'),
+          tags$section(h3('Modelled priorities'),p('Strategic Management Prospects version 4 compares conservation opportunities across Victoria. The app uses median cost effectiveness ranks and hectares from DEECA\'s public summary-area service.'),
             tags$dl(tags$dt('Coverage'),tags$dd(paste(number(nrow(d$areas)),'summary areas;',number(nrow(d$actions)),'action records; 16 actions.')),
-              tags$dt('Model release'),tags$dd('July 2023'),tags$dt('Data retrieved'),tags$dd(d$retrieved),tags$dt('Snapshot release'),tags$dd(d$release_id),tags$dt('Spatial preparation'),tags$dd('Geometry repaired and simplified to 100 metres for display only. Relevant hectares are source attributes; land-cover analysis uses original unsimplified vertices.')),
+              tags$dt('Model release'),tags$dd('July 2023'),tags$dt('Data retrieved'),tags$dd(format(as.Date(d$retrieved),'%d %B %Y')),tags$dt('Snapshot release'),tags$dd(d$release_id),tags$dt('Spatial preparation'),tags$dd('Geometry repaired and simplified to 100 metres for display only. Relevant hectares are source attributes; land cover analysis uses original unsimplified vertices.')),
             tags$a(href='https://www.environment.vic.gov.au/biodiversity/naturekit/nk-datalists',target='_blank',rel='noopener','NatureKit dataset guide')),
-          tags$section(h3('Historical land cover'),p('Seven classified GeoTIFFs from Victorian Land Cover Time Series provide 19 classes at 25-metre resolution. Filenames and raster attributes label the first epoch 1985-1990 and the last 2015-2019. These are multi-year historical epochs, not current cover.'),
-            p('Statistics use original SMP vertices, projected to EPSG:3111 and repaired without simplification. Boundary-cell intersections are weighted by covered fraction. Grid hectares use projected area; shares divide each class by classified area in that unit and epoch.'),
+          tags$section(h3('Historical land cover'),p('Seven classified GeoTIFFs from Victorian Land Cover Time Series provide 19 classes at 25 metre resolution. Filenames and raster attributes label the first epoch 1985 to 1990 and the last 2015 to 2019. These are multiple year historical epochs, not current cover.'),
+            p('Statistics use original SMP vertices, projected to EPSG:3111 and repaired without simplification. Boundary cell intersections are weighted by covered fraction. Grid hectares use projected area; shares divide each class by classified area in that unit and epoch.'),
             p('Code 0 is unclassified. It is separate from NoData or absent coverage. Units overlap: do not sum their values into a combined or statewide total.'),
-            tags$a(href='https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series',target='_blank',rel='noopener','Land-cover catalogue and CC BY 4.0 licence'),
-            p(class='caption',if(!is.null(d$landcover)) paste('Prepared release:',d$landcover$manifest$release) else 'Land-cover summaries not prepared.')),
+            tags$a(href='https://discover.data.vic.gov.au/dataset/victorian-land-cover-time-series',target='_blank',rel='noopener','Land cover catalogue and CC BY 4.0 licence'),
+            p(class='caption',if(!is.null(d$landcover)) paste('Prepared release:',d$landcover$manifest$release) else 'Land cover summaries not prepared.')),
           tags$section(h3('How to interpret a rank'),p('A rank of 88 is a relative model ranking. It is not an 88% improvement, a probability or a dollar return. Do not add ranks together.'),
-            p('Higher rank values indicate stronger modelled cost-effectiveness. Benefit-rank fields are omitted because available sources disagree about their aggregation.')),
-          tags$section(h3('What is missing'),p('An absent action record is shown as missing, rather than zero. Unit 925 has no action records. Site access, actual project costs, local delivery and current ecological condition are outside these datasets. Land-cover change cannot be attributed to management, and does not measure habitat quality or species abundance.'),
-            p('Downloaded area reports can differ from the live service. The app consistently uses one service snapshot. Net changes are differences between class totals, not a transition matrix. Epoch-specific classified-area denominators and coverage are included in downloads.'))),
+            p('Higher rank values indicate stronger modelled cost effectiveness. Benefit rank fields are omitted because available sources disagree about their aggregation.')),
+          tags$section(h3('What is missing'),p('An absent action record is shown as missing, rather than zero. Unit 925 has no action records. Site access, actual project costs, local delivery and current ecological condition are outside these datasets. Land cover change cannot be attributed to management, and does not measure habitat quality or species abundance.'),
+            p('Downloaded area reports can differ from the live service. The app consistently uses one service snapshot. Net changes are differences between class totals, not a transition matrix. Epoch specific classified area denominators and coverage are included in downloads.'))),
         div(class='method-note','Source attribution: State of Victoria, Department of Energy, Environment and Climate Action.'))),
-    tags$footer(span('Data: State of Victoria / DEECA'),span('Conservation priorities & land-cover change'))
+    tags$footer(span('Data: State of Victoria / DEECA'),span('Conservation priorities & land cover change'))
   )
 }

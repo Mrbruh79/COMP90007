@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<datagraph>
+  <graph>
+    <properties>
+      <default-execution-subgraph-guid value="aca0e20d-6bda-440c-9735-4d109d253f20" />
+    </properties>
+    <node-execution-subgraphs>
+      <pair execution-subgraph-guid="aca0e20d-6bda-440c-9735-4d109d253f20" node-guid="8ce33efa-0623-406b-86dc-5a17280ad9fd" />
+      <pair execution-subgraph-guid="aca0e20d-6bda-440c-9735-4d109d253f20" node-guid="d2cc8255-a863-4f28-98c9-7e75ba1c1c12" />
+    </node-execution-subgraphs>
+    <nodes>
+      <single-value-field-node fieldname="[Parameters].[TrendMode]" fieldname-input-guid="3c7ee83e-96ff-48fa-adb0-48787ac40149" node-guid="8ce33efa-0623-406b-86dc-5a17280ad9fd" value-output-guid="77f7017d-6db4-4ec5-b4e7-bf889c011111" />
+      <axis-title-node duplicate-index="0" fieldname="[federated.landcover].[sum:TrendValue:qk]" node-guid="d2cc8255-a863-4f28-98c9-7e75ba1c1c12" orientation="vertical" sheet-identifier="{A84818B2-B287-40C9-BAAC-948E4D0DF631}" title-input-guid="619e1bff-3974-44f7-91c1-1166e9d154f0" />
+    </nodes>
+    <edges>
+      <edge from="77f7017d-6db4-4ec5-b4e7-bf889c011111" to="619e1bff-3974-44f7-91c1-1166e9d154f0" />
+    </edges>
+    <pin-values />
+  </graph>
+</datagraph>

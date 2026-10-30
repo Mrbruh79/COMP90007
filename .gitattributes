@@ -1,0 +1,2 @@
+# The release manifest fingerprints canonical CSV bytes on every platform.
+tableau/data/landcover.csv text eol=lf

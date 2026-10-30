@@ -60,3 +60,27 @@ Historical planning and the old progress prototype are preserved separately. The
 ## Tableau visual redesign, 29 October 2026
 
 Replaced the tall ungrouped layout with a 1400 × 1660 dashboard, green header, area sidebar, white chart sections and shorter reading guides. Positioned endpoint period controls beside chart 3 and widened the 19-class legend. Opened and saved the final packaged workbook in Tableau Desktop; verified the upper layout, full legend, lower comparison and source notes. Screenshot: `docs/qa-tableau-redesign.png`. Workbook checks reconcile all 140,049 records and preserve the focus switch and comparison scales. The JavaScript bridge checks pass; hosted embedding remains deferred.
+
+
+## Tableau readability revision, 29 October 2026
+
+The local workbook now has four sheets: grouped/detailed composition, a selectable share/baseline-change trend, connected endpoints, and signed net-change bars. The seven presentation groups preserve all 19 source classes and are documented in tableau/README.md. Baseline change is each unit/class share minus its own 1985-1990 share; the selected endpoints affect only the two lower comparisons. Automatic trend scales are explicitly labelled. Endpoint comparisons retain the fixed 0-100% scale.
+
+Controls occupy full-width rows. The 1500 x 2570 desktop canvas provides a single-column full-name legend, short reading guides, and visible denominator/source/grouping notes. It requires vertical scrolling. Close endpoint labels can still meet when values are equal or nearly equal; the signed bars and tooltips provide the readable difference. No phone-layout claim is made.
+
+Opened the final candidate in Tableau Desktop 2026.2. Verified grouped overview, full 19-name legend, Water and selected-class mode (approximately 0-3% composition range), baseline-change trends, connected endpoints and signed change labels. Saved natively, then restored a portable relative CSV connection when promoting to the main TWB/TWBX names. CSV values and release are unchanged. The structure/data check reconciles 140,049 rows and additionally checks grouping closure, repeated coverage-field aggregation and the baseline-change reference. Bridge mock tests pass. Hosted Tableau integration remains untested and its URL remains blank.
+
+Windows portability: the chart CSV is pinned to LF in .gitattributes and ZIP paths are checked with POSIX separators. Unrelated local spatial-cache mismatch remains unresolved; full Shiny startup from this checkout is not claimed by this workbook revision.
+
+
+## Repair of the oversized Tableau revision
+
+The earlier 1500 x 2570 revision was replaced by a 1500 x 1840 layout with three visible sheets: composition, history, and signed change. The redundant connected-endpoint sheet was removed. Parameter cards now have enough vertical space for labels above dropdowns. A native Desktop legend edit established `leg-item-layout="vert"`; the builder preserves this setting instead of allowing automatic multiple columns to truncate class names. The detailed legend scrolls vertically. Short period labels (1985-90, etc.) leave the underlying epoch values intact.
+
+Tableau Desktop 2026.2 visual checks exercised the detailed legend and Water selection with four separate areas. All four history series rendered, and four change rows remained distinct with labels including -57.2 pp and -0.9 pp. The period controls and attribution remained visible in the lower layout. The trend axis label was shortened to Value; its selected measure and units appear immediately above the chart. No new data processing or publication was performed.
+
+## Final workbook and text cleanup, 30 October 2026
+
+The current local Tableau workbook has three sheets on a 1180 x 1240 canvas: history lines, composition bars and endpoint change dots. Native Tableau 2026.2 checks covered the grouped and detailed composition, selected cover, baseline change, four areas and negative changes. Source values and parameter values are unchanged. Parameter aliases and display formatting remove dash punctuation from prose while retaining functional syntax and negative values. R application and preparation blocks now have explanatory comments.
+
+The R suite passed 47 checks. Tableau data and package checks reconcile all 140,049 rows; bridge checks passed. A local Edge browser run checked the currently published view inside Shiny, bidirectional selection, exports, expanded charts, viewport sizing, JavaScript errors and the offline fallback. The redesigned local workbook still requires republishing and a final embed check after upload.

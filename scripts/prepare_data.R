@@ -1,4 +1,5 @@
 # Run once from the project root. Refresh explicitly with Rscript scripts/prepare_data.R --refresh.
+# Download a complete service snapshot only when explicitly refreshed.
 prepare_spatial <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   stopifnot(requireNamespace('sf',quietly=TRUE),requireNamespace('jsonlite',quietly=TRUE))
   cache <- 'data/smp_cache.rds'
@@ -23,6 +24,7 @@ prepare_spatial <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   }
   options(timeout=max(180,getOption('timeout')))
   message('Downloading DEECA summary areas...')
+  # Query object identifiers first, then fetch complete batches within service limits.
   ids <- get_json(paste0(base,'/0/query?where=1%3D1&returnIdsOnly=true&f=json'))$objectIds
   stopifnot(length(ids)>0,!anyDuplicated(ids))
   parts <- list()
@@ -44,6 +46,7 @@ prepare_spatial <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
     stopifnot(!isTRUE(x$exceededTransferLimit),nrow(x$features)==length(chunk))
     parts[[length(parts)+1L]] <- x$features$attributes
   }
+  # Verify the area and action keys before saving the snapshot.
   actions <- do.call(rbind,parts)
   stopifnot(!anyDuplicated(original$microID),!anyDuplicated(paste(actions$microID,actions$Action)),
     all(actions$microID %in% original$microID),all(actions$AREA_TOT>0),
@@ -55,11 +58,12 @@ prepare_spatial <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   change <- 100*(as.numeric(sf::st_area(areas))-as.numeric(sf::st_area(repaired)))/as.numeric(sf::st_area(repaired))
   audit <- list(original_invalid=sum(!sf::st_is_valid(original)),display_invalid=sum(!sf::st_is_valid(areas)),
     max_absolute_display_area_change_pct=max(abs(change)),simplification_metres=100,
-    note='Per-feature geometry check only; no analytical overlays or cross-boundary topology claim.')
+    note='Per feature geometry check only; no analytical overlays or cross boundary topology claim.')
   areas <- sf::st_transform(areas,4326)
   stopifnot(!any(sf::st_is_empty(areas)),all(sf::st_is_valid(areas)),identical(original$microID,areas$microID))
   stamp <- format(Sys.time(),'%Y%m%dT%H%M%S',tz='UTC')
   if(file.exists(cache)) file.copy(cache,paste0('data/downloads/smp_cache-',stamp,'.rds'),overwrite=FALSE)
+  # Keep original vertices for analysis and simplified geometry for display.
   saveRDS(original,'data/downloads/smp_original.rds')
   saveRDS(original,'data/smp_original.rds')
   snapshot <- list(areas=areas,actions=actions,retrieved=as.character(Sys.Date()),source=base,

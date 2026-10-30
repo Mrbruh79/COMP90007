@@ -1,4 +1,4 @@
-"""Build a local handoff with the frozen cache; no downloads or installations."""
+"""Build a local application package with the frozen cache; no downloads or installations."""
 from pathlib import Path
 import hashlib, json, zipfile
 ROOT = Path(__file__).resolve().parents[1]

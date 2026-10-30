@@ -1,4 +1,45 @@
-# Runtime summaries only. The full-resolution overlay lives in scripts/prepare_landcover.R.
+# Runtime summaries only. The full resolution overlay lives in scripts/prepare_landcover.R.
+# Validate the original analytical boundaries and the map cache before joining releases.
+validate_spatial_release <- function(d, landcover, cache_path='data/smp_cache.rds',
+                                     boundary_path='data/smp_original.rds') {
+  fail <- function(reason) stop(paste0('The SMP cache is incompatible with the land cover release: ',reason,
+    '\nRestore matching spatial files, or rebuild the land cover summaries and Tableau input together. ',
+    'Do not edit the release fingerprints to bypass this check.'),call.=FALSE)
+  manifest <- landcover$manifest
+  if(!file.exists(boundary_path)) fail(paste('missing original boundaries:',boundary_path))
+  if(!identical(unname(tools::md5sum(boundary_path)),manifest$boundary_md5))
+    fail('the original boundary file differs from the one used for the raster analysis.')
+  fingerprint <- unname(tools::md5sum(cache_path))
+  if(identical(fingerprint,manifest$spatial_cache_md5))
+    return(invisible(list(method='exact-cache',cache_md5=fingerprint)))
+  # RDS bytes include retrieval metadata, serialization and display geometry details.
+  # Verify the frozen analytical source and the actual map before accepting a new hash.
+  original <- readRDS(boundary_path)
+  if(!inherits(d$areas,'sf') || anyDuplicated(d$areas$microID) ||
+     nrow(d$areas)!=nrow(original) || !setequal(d$areas$microID,original$microID))
+    fail('summary area identifiers differ.')
+  index <- match(original$microID,d$areas$microID)
+  for(field in c('Name','Area','Shape_Area')) {
+    if(!field %in% names(d$areas) ||
+       !isTRUE(all.equal(original[[field]],d$areas[[field]][index],check.attributes=FALSE,tolerance=1e-10)))
+      fail(paste('source boundary attributes differ:',field))
+  }
+  expected <- sf::st_make_valid(sf::st_simplify(
+    sf::st_transform(sf::st_make_valid(original),3111),dTolerance=100,preserveTopology=TRUE))
+  actual <- sf::st_transform(d$areas[index,],3111)
+  if(any(sf::st_is_empty(actual)) || !all(sf::st_is_valid(actual)))
+    fail('display geometry is empty or invalid.')
+  distance <- as.numeric(sf::st_distance(sf::st_geometry(expected),sf::st_geometry(actual),
+                                        by_element=TRUE,which='Hausdorff'))
+  # One centimetre permits floating point/CRS round trips, not changed map boundaries.
+  if(any(!is.finite(distance)) || any(distance>.01))
+    fail('display boundaries differ from the frozen source by more than 0.01 metre.')
+  message('SMP cache fingerprint differs; frozen source, area attributes and display geometry match the land cover release.')
+  invisible(list(method='verified-boundaries',cache_md5=fingerprint,
+                 maximum_display_difference_m=max(distance)))
+}
+
+# Read prepared summaries and check their identifiers, release and file fingerprint.
 load_landcover <- function(path='data/landcover') {
   if(!file.exists(file.path(path,'summary.csv.gz'))) return(NULL)
   x <- read.csv(gzfile(file.path(path,'summary.csv.gz')),stringsAsFactors=FALSE)
@@ -20,6 +61,8 @@ load_landcover <- function(path='data/landcover') {
     '#6b9f91','#658da5','#8ab8ad','#3b807d')
   list(summary=x,classes=classes,epochs=epochs,manifest=manifest)
 }
+# Join two periods by area and class, then calculate later minus earlier values.
+# Percentage points and hectares are kept as separate measures.
 landcover_change <- function(d,ids,from,to,class_code=NULL) {
   stopifnot(!is.null(d$landcover))
   epochs<-d$landcover$epochs
@@ -33,10 +76,11 @@ landcover_change <- function(d,ids,from,to,class_code=NULL) {
   out$change_ha<-out$area_ha_end-out$area_ha_start
   out$change_pp<-out$share_pct_end-out$share_pct_start
   out$start_epoch<-from;out$end_epoch<-to;out$data_release<-d$landcover$manifest$release
-  out$area_basis<-'EPSG:3111 projected grid hectares; exact boundary-cell fractions'
-  out$share_basis<-'Classified area (codes 1-19) in each unit and epoch; no combined-area totals'
+  out$area_basis<-'EPSG:3111 projected grid hectares; exact boundary cell fractions'
+  out$share_basis<-'Classified area (codes 1-19) in each unit and epoch; no combined area totals'
   out[order(match(out$microID,ids),out$class_code),]
 }
+# Convert comparison values into a fixed share scale or a symmetric change scale.
 landcover_map_spec <- function(d,code,from,to,metric='share') {
   x<-landcover_change(d,d$areas$microID,from,to,code)
   x<-x[match(d$areas$microID,x$microID),]
@@ -49,6 +93,7 @@ landcover_map_spec <- function(d,code,from,to,metric='share') {
   list(values=vals,colours=colours,rows=x,label=label,metric=metric,limit=limit,
     formatted=ifelse(is.na(vals),'No classified coverage',paste0(ifelse(metric=='change' & vals>0,'+',''),number(vals,1),if(metric=='change') ' percentage points' else '%')))
 }
+# Explain the current map scale and preserve a separate missing coverage category.
 landcover_legend <- function(s) htmltools::HTML(paste0('<strong>',s$label,'</strong>',
   '<div class="land-gradient ',if(s$metric=='change') 'diverging' else '', '" role="img" aria-label="',s$label,'"></div>',
   '<div class="rank-ticks">',if(s$metric=='change') paste0('<span>-',number(s$limit),'</span><span>0</span><span>+',number(s$limit),'</span>') else '<span>0%</span><span>50%</span><span>100%</span>',

@@ -1,23 +1,35 @@
 # Historical land cover in Victoria
 
-Open `Victoria_Landscape_Change.twbx`. The `LandscapeChange` dashboard contains its own CSV: 140,049 area/period/cover-type records.
+Open `Victoria_Landscape_Change.twbx` to inspect or republish the workbook with its bundled 140,049-row CSV. The dashboard name is `LandscapeChange`.
 
-Choose a **Main area** and a **Cover type**. Optionally choose up to three **Additional areas**. An ID such as `unit668` identifies one mapped summary area. Blank additional-area slots are unused; repeated IDs do not duplicate records.
+## Reading the dashboard
 
-1. **What covers the main area?** Each bar is one historical period. In **All cover types**, colours identify cover types and each stack totals 100%. In **Selected cover type**, only the chosen type appears and its percentage scale adjusts to make small values readable. Use **Chart 1: what should the bars show?** to switch modes.
-2. **How did the chosen cover type change over time?** Each coloured line is one area. All seven periods remain visible. The percentage scale stays at 0-100%; small categories can be inspected in chart 1.
-3. **Did the chosen cover type increase or decrease?** Each row is one area. Dot colours distinguish the **Earlier period** and **Later period**. A later dot farther right means an increase; farther left means a decrease. Equal or close values can overlap. Period choices affect this chart only; the earlier period must precede the later period.
+The 1180 x 1240 desktop layout follows three questions:
 
-**Land covered (%)** uses land with classified data in each area and period. For example, 40% means 40 of every 100 classified hectares have that cover type. Missing and unclassified areas remain separate hover fields. A change from 30% to 35% is +5 percentage points. Overlapping units must not be added together. Historical cover does not establish habitat health or management outcomes.
+1. **Selected cover through time:** the largest chart compares the chosen cover type across all seven periods. Labels at the ends identify the areas. The legend distinguishes the main area and each pinned comparison. The area legend remains available when labels collide. **Trend measure** switches between cover share (%) and change since each area's own first period (pp). The vertical axis title changes with this choice. Automatic ranges include zero in both modes.
+2. **Land cover composition:** seven stacked bars describe the main area, identified in the heading. **Composition view** offers seven display groups, all 19 source classes, or the selected cover type on an automatic scale. The legend follows the top to bottom order of the stacks. Detailed mode has a scrolling legend; hover for long class names.
+3. **Change between selected periods:** dots show later minus earlier share on a fixed -100 to +100 percentage-point scale. Five major ticks and a zero reference keep the scale comparable between selections. Labels give earlier percentage, later percentage and signed change; hover for greater precision. A small change therefore stays visibly small. Positive means increased cover share, not necessarily ecological benefit. Invalid or reversed intervals produce no endpoint comparison.
 
-Hover fields use readable labels for cover type, historical period, percentage, hectares, classified coverage, unclassified land and missing data. The dashboard includes on-chart reading guides, a complete cover-type legend and source notes.
+Shiny owns selection of areas, cover type and endpoint periods. Only the two presentation controls remain visible in Tableau. All original parameter names and captions remain available to the API bridge. The cover type title, composition-area heading and endpoint-date heading update with those parameters. For standalone inspection in Tableau Desktop, show a parameter from the Data pane to change it. The published view is designed for use within Shiny.
 
-Rebuild the input with `Rscript scripts/prepare_tableau.R`, then `python3 scripts/build_tableau.py`. Close the workbook before regenerating it, then reopen it in Tableau Desktop to verify rendering. The dashboard is 1200 by 2000 pixels, with the charts arranged vertically for readable labels.
+The canvas uses the app's paper background, Georgia cover type heading, consistent section typography and restrained land cover colours. Duplicate worksheet titles and the nested outer frame are removed. The source data and chart values are unchanged.
 
-The parameters used by the app bridge are **Main area**, **Additional area 1 (optional)** through **Additional area 3 (optional)**, **Cover type**, **Earlier period**, **Later period**, and **Data release**. The chart-1 mode is controlled within Tableau. Internal field names and the data release are preserved.
+## Data and interpretation
 
-`data/manifest.json` identifies the release and CSV hash. The bridge rejects a mismatched release and an old ProgressOverview URL. Hosted integration remains a separate publication-dependent validation step.
+Source: State of Victoria / DEECA, Victorian Land Cover Time Series (2020), CC BY 4.0. The first downloaded file is labelled 1985-1990; the catalogue describes it as 1987-1990. The app follows the files. Baseline change always uses 1985-1990, independently of the chosen earlier endpoint.
 
-## Dashboard layout
+Percentages exclude missing and unclassified land. Areas overlap and must not be summed into statewide hectares. Land cover change does not establish habitat quality, ecological recovery or what one class replaced. Further limitations appear in the app's Sources & methods section.
 
-The 1400 × 1660 dashboard groups area and cover-type controls in the left sidebar. Optional comparison areas sit below them. The bar-view switch is above chart 1; earlier/later controls sit beside chart 3. Dark green headings, pale green control panels and white chart panels establish a consistent reading order. The complete cover-type legend is visible beside chart 1.
+Group mapping by source code: agriculture (4,5,8); developed/disturbed (1,2,3); plantations/exotic trees (6,7,15); wetland vegetation (9,16,18,19); other native vegetation (10,11,12,13); natural low cover (14); open water (17). These are presentation groups, not new government classifications. Grouped shares sum source classes within one unit and epoch. Repeated coverage and missing-area fields aggregate by minimum rather than sum.
+
+Colour assignments use explicit data source column instances so Tableau retains them. Colours follow selection slots for every area: main green, first pin ochre, second pin slate and third pin rose. The history and change charts use the same assignments as the local R history chart. Chart data use LF line endings to preserve the release checksum on Windows.
+
+## Rebuild and republish
+
+Run `python scripts/build_tableau.py`. The generator uses the native validated XML scaffold and `scripts/tableau_axis_title.xml`, a dynamic-axis graph saved by Tableau 2026.2. Each rebuild binds that graph to the generated trend worksheet's identifier. Reopen in Desktop to check the actual rendering; XML/data checks alone do not establish visual correctness.
+
+Run `python tests/check_tableau.py` and `node tests/landscape_bridge.cjs` for the data/package and parameter-bridge checks.
+
+Republish under the existing **Victoria_Landscape_Change** workbook name and **LandscapeChange** dashboard name. Keep this dashboard selected when publishing. The Shiny embed reads the publication's canvas size, supporting the older publication during the handover. Restart Shiny after updating the local files, then check that a map selection updates the title, lines, composition area and endpoint values. The replacement publication requires this final check after upload.
+
+Display labels use words in place of dash punctuation. The chart axes abbreviate years, such as 1985/90; headings and Shiny controls retain full years. Parameter aliases change display text while original source values remain available to the bridge.

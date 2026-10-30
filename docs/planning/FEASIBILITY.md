@@ -67,6 +67,6 @@ An observation-count dashboard would offer many records but could confuse survey
 
 ## Feasibility conclusion
 
-Planning estimate: approximately 100-140 student hours across data review, Shiny, Tableau, evaluation and submission, or 25-35 hours per member. This is a workload estimate, not measured effort. The core uses publicly accessible data and existing R/Tableau tools; no paid data purchase has been identified. Confirm the team's Tableau authoring access and hosting choice before treating software cost as settled. A statewide raster extension could materially increase both processing time and workload.
+Planning estimate: approximately 100-140 working hours across data review, Shiny, Tableau, evaluation and submission, or 25-35 hours per member. This is a workload estimate, not measured effort. The core uses publicly accessible data and existing R/Tableau tools; no paid data purchase has been identified. Confirm the team's Tableau authoring access and hosting choice before treating software cost as settled. A statewide raster extension could materially increase both processing time and workload.
 
 The topic is feasible with the acquired core data and has room for substantial technical and design work. Its strongest contribution is helping an officer explain a comparison, with evidence visible at each step. The excellent rubric bands will depend on implementation quality, observed usability and a precise report; dataset size and extra chart types alone will not establish them.

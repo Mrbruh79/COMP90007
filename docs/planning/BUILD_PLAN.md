@@ -1,6 +1,6 @@
 # Build, evaluation and submission plan
 
-The supplied deadline is 3 November 2026 at 23:59. This plan starts on 21 October and reserves the final days for testing and submission. It is a proposed schedule for four students, not a record of work already performed.
+The supplied deadline is 3 November 2026 at 23:59. This plan starts on 21 October and reserves the final days for testing and submission. It is a proposed schedule for four team members, not a record of work already performed.
 
 | Dates | Deliverable and gate |
 |---|---|

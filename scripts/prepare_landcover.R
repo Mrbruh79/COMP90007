@@ -1,4 +1,4 @@
-# Reproducible full-resolution overlay. Run from the project root.
+# Reproducible full resolution overlay. Run from the project root.
 # Dependencies are installed separately; no runtime installation or public upload.
 prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   for(p in c('terra','sf','exactextractr','jsonlite','foreign'))
@@ -6,7 +6,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   out <- 'data/landcover'; raw <- 'data/downloads/landcover'
   dir.create(out,recursive=TRUE,showWarnings=FALSE);dir.create(raw,recursive=TRUE,showWarnings=FALSE)
   if(file.exists(file.path(out,'summary.csv.gz')) && !refresh) {
-    message('Using frozen land-cover summaries. Use --refresh to recalculate.');return(invisible(NULL))
+    message('Using frozen land cover summaries. Use --refresh to recalculate.');return(invisible(NULL))
   }
   url <- 'https://cl-isd-prd-datashare-s3-delivery.s3.amazonaws.com/PrePackages/VIC_LANDCOVER_TS.zip'
   zip <- file.path(raw,'VIC_LANDCOVER_TS.zip')
@@ -15,6 +15,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
     temporary <- paste0(zip,'.part');download.file(url,temporary,mode='wb',quiet=FALSE)
     if(!file.rename(temporary,zip)) stop('Could not save source archive')
   }
+  # Extract source rasters and their metadata from the official archive.
   members <- unzip(zip,list=TRUE)$Name
   keep <- members[grepl('[.]tif$|[.]xml$|[.]dbf$|[.]mht$',members)]
   unzip(zip,files=keep,exdir=raw,overwrite=TRUE)
@@ -23,6 +24,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   boundary_path<-if(file.exists('data/smp_original.rds')) 'data/smp_original.rds' else 'data/downloads/smp_original.rds'
   if(!file.exists(boundary_path))
     stop('Original SMP boundaries are required. Run Rscript scripts/prepare_data.R --refresh first. Display boundaries must not be used for analysis.')
+  # Use original area boundaries for analysis, with projected units in metres.
   original <- readRDS(boundary_path)
   original <- original[order(as.integer(sub('unit','',original$microID))),]
   projected <- sf::st_transform(original,3111)
@@ -40,6 +42,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   write.csv(overlap,file.path(out,'boundary_overlaps.csv'),row.names=FALSE)
   epochs <- list();summaries <- list();audits <- list();definition_changes<-list();classes <- NULL;template <- NULL
   started <- Sys.time()
+  # Process each historical raster on its native grid and retain source class definitions.
   for(i in seq_along(files)) {
     f<-files[i];r<-terra::rast(f);rat<-foreign::read.dbf(paste0(f,'.vat.dbf'),as.is=TRUE)
     stopifnot(identical(sort(as.integer(rat$Value)),0:19),length(unique(rat$START_YEAR))==1,length(unique(rat$END_YEAR))==1)
@@ -59,6 +62,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
     start<-unique(rat$START_YEAR);end<-unique(rat$END_YEAR);id<-paste0(start,'_',end)
     epochs[[i]]<-data.frame(epoch_id=id,epoch_label=paste(start,end,sep='-'),epoch_start=start,epoch_end=end,source_filename=basename(f))
     message('Exact class coverage: ',id,' (',i,'/7)')
+    # Weight boundary cells by the fraction covered by each area.
     z<-exactextractr::exact_extract(r,repaired,c('count','frac'),default_value=-9999,progress=FALSE,max_cells_in_memory=2e6)
     codes<-as.integer(sub('frac_','',names(z)[grepl('^frac_',names(z))]))
     stopifnot(all(codes %in% c(-9999,0:19)))
@@ -77,6 +81,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
     unclassified<-class_area[,'0'];valid<-rowSums(class_area[,as.character(1:19),drop=FALSE])
     nodata<-class_area[,'-9999']
     stopifnot(all(abs(rowSums(class_area)-polygon_ha)<.01))
+    # Produce one row for every area and classified cover type in this period.
     x<-expand.grid(class_code=1:19,area_index=seq_len(nrow(repaired)))
     x$microID<-repaired$microID[x$area_index];x$epoch_id<-id
     x$area_ha<-class_area[cbind(x$area_index,x$class_code+2L)]
@@ -97,6 +102,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
   changes<-do.call(rbind,definition_changes)
   if(is.null(changes)) changes<-data.frame(source_filename=character(),class_code=integer(),initial_description=character(),epoch_description=character())
   write.csv(changes,file.path(out,'metadata_description_changes.csv'),row.names=FALSE)
+  # Bind the prepared release to both the source archive and analytical boundaries.
   release<-paste0('VLCTS2020-',substr(unname(tools::md5sum(zip)),1,12),'-',substr(unname(tools::md5sum(boundary_path)),1,8))
   x$data_release<-release
   stopifnot(nrow(x)==nrow(repaired)*7*19,!anyDuplicated(x[c('microID','epoch_id','class_code')]))
@@ -114,7 +120,7 @@ prepare_landcover <- function(refresh='--refresh' %in% commandArgs(TRUE)) {
     geometry=list(original_invalid=sum(!sf::st_is_valid(projected)),repaired_invalid=sum(!sf::st_is_valid(repaired)),
       maximum_repair_area_change_m2=max(abs(as.numeric(sf::st_area(repaired))-pre_area)),
       interior_overlap_pairs=nrow(overlap),overlap_pairs_above_1m2=sum(overlap$overlap_ha>.0001)),
-    denominator='Classified area, codes 1-19, within each unit and epoch. Code 0 is unclassified and excluded; NoData/outside coverage is separate.',
+    denominator='Classified area, codes 1-19, within each unit and epoch. Code 0 is unclassified and excluded; NoData or outside coverage is separate.',
     area_method='Exact polygon-cell class fractions times projected polygon area. Fraction sums normalised after raster coverage closure within 0.1 ha; NoData sentinel preserved separately; units wholly inside raster rectangle. Grid hectares in EPSG:3111, not geodesic hectares.',
     boundary_method='Original source vertices transformed to EPSG:3111 then GEOS make-valid. No simplification for analysis. Units overlap and must not be summed to statewide totals.',
     epoch_note='Downloaded filenames and START_YEAR/END_YEAR use 1985-1990; catalogue says 1987-1990. App follows downloaded metadata.',
