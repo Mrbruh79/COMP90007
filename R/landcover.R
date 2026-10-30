@@ -55,7 +55,6 @@ load_landcover <- function(path='data/landcover') {
   x$epoch_label <- epochs$epoch_label[match(x$epoch_id,epochs$epoch_id)]
   x$epoch_start <- epochs$epoch_start[match(x$epoch_id,epochs$epoch_id)]
   x$epoch_end <- epochs$epoch_end[match(x$epoch_id,epochs$epoch_id)]
-  # Deliberately restrained categorical colours; labels remain the primary key.
   classes$colour <- c('#555b54','#8a9087','#a58c78','#c6be85','#c6a352','#7d8f51','#876b4f',
     '#879d6e','#5a8974','#9db56b','#6d995b','#285f47','#759779','#ccc2a8','#9f7b63',
     '#6b9f91','#658da5','#8ab8ad','#3b807d')

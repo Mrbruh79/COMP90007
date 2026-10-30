@@ -1,4 +1,3 @@
-/* Tableau Public Embedding API v3. Local evidence never depends on this module. */
 (function (root) {
   const PARAMETERS = {focus:'Main area',compare1:'Additional area 1 (optional)',compare2:'Additional area 2 (optional)',compare3:'Additional area 3 (optional)',class:'Cover type',start:'Earlier period',end:'Later period'};
   class LandscapeBridge {
@@ -94,8 +93,6 @@
         if (current !== ticket) return;
         clearTimeout(ticket.timer);
         try {
-          // Read the published canvas so the previous publication still fits
-          // during the handover, and the compact replacement displays at 1:1.
           const size = viz.workbook.activeSheet.size;
           if (size?.minSize?.width > 0 && size?.minSize?.height > 0) {
             nativeWidth = size.minSize.width; nativeHeight = size.minSize.height + 50;

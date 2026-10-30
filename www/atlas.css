@@ -7,7 +7,6 @@
 
 .rank-legend{width:145px;padding:9px 11px;background:rgba(247,246,241,.95);font-size:11px;color:var(--ink)}.rank-gradient{height:10px;margin-top:8px;background:linear-gradient(to right,#edf2df,#b8d398,#6fa577,#285f47)}.rank-ticks{display:flex;justify-content:space-between;font-size:10px}.rank-missing{display:flex;align-items:center;gap:6px;margin-top:8px}.rank-missing i{display:inline-block;background:#e1e3df;width:12px;height:12px}
 
-/* Shared atlas controls and the embedded progress workspace. */
 #map_caption{font-size:11px;max-width:70%}.rank-legend{width:180px}.rank-legend strong{font-weight:600}
 .control-rail .checkbox{font-size:12px;margin:0 0 16px}.control-rail #zoom_area{padding:6px;font-size:12px}
 #tableau-host{max-width:1500px;margin:0 auto}
