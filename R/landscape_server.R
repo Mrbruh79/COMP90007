@@ -11,7 +11,8 @@ landscape_server <- function(d,input,output,session,selected,pins,shown_ids,noti
   })
   chosen_class<-reactive({req(input$land_class %in% classes$class_code);as.integer(input$land_class)})
   class_label<-reactive(classes$class_label[match(chosen_class(),classes$class_code)])
-  period_label<-reactive({p<-valid_period();paste(display_text(e$epoch_label[match(p$from,e$epoch_id)]),'to',display_text(e$epoch_label[match(p$to,e$epoch_id)]))})
+  # Separate the two multi-year periods so their internal date ranges stay clear.
+  period_label<-reactive({p<-valid_period();paste(display_text(e$epoch_label[match(p$from,e$epoch_id)]),'compared with',display_text(e$epoch_label[match(p$to,e$epoch_id)]))})
   # Synchronise area selection between the priority and landscape workspaces.
   observeEvent(input$land_area,{
     if(input$land_area %in% d$areas$microID && !identical(input$land_area,input$area))

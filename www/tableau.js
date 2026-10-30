@@ -19,9 +19,15 @@
       this.client = client; this.report = report; this.desired = null;
       this.applied = {}; this.busy = false; this.ready = false; this.closed = false;
       this.revision = 0;
+      this.parameterAliases = new Map();
     }
     async connect(release) {
       const parameters = await this.client.getParametersAsync();
+      // Tableau accepts list aliases in API calls. Keep source values in the
+      // shared state so exports and reverse events still match the dataset.
+      this.parameterAliases = new Map(parameters.map(parameter => [parameter.name,
+        new Map((parameter.allowableValues?.allowableValues || []).map(value =>
+          [value.value, value.hasAlias && value.aliasValue !== undefined ? value.aliasValue : value.value]))]));
       const found = Object.fromEntries(parameters.map(p => [p.name, p.currentValue.value]));
       if (found['Data release'] !== release) throw new Error('The dashboard uses a different data release.');
       for (const name of Object.values(PARAMETERS)) {
@@ -63,7 +69,9 @@
             const value = next[key];
             if (this.closed) return;
             if (value !== undefined && this.applied[name] !== value) {
-              await this.client.changeParameterValueAsync(name, value);
+              const aliases = this.parameterAliases.get(name);
+              const apiValue = aliases?.has(value) ? aliases.get(value) : value;
+              await this.client.changeParameterValueAsync(name, apiValue);
               this.applied[name] = value;
             }
           }

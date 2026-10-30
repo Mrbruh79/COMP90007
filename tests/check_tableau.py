@@ -47,6 +47,16 @@ with zipfile.ZipFile(t/(args.workbook_name+'.twbx')) as z:
  for connection in packaged.findall(".//connection[@class='textscan']"):
   assert (Path(twbs[0]).parent/connection.attrib['directory']/connection.attrib['filename']).as_posix() in contents
  assert packaged.find('dashboards/dashboard').attrib['name']=='LandscapeChange'
+ # A saved extract package must use the same calculations as the authoring file.
+ master_columns=r.find("datasources/datasource[@name='federated.landcover']")
+ packed_columns=packaged.find("datasources/datasource[@name='federated.landcover']")
+ for column in master_columns.findall('column'):
+  calculation=column.find('calculation')
+  if calculation is not None:
+   saved=packed_columns.find(f"column[@name='{column.attrib['name']}']/calculation")
+   assert saved is not None and saved.get('formula')==calculation.get('formula'),column.attrib['name']
+   for copied in packaged.findall(f".//datasource-dependencies/column[@name='{column.attrib['name']}']/calculation"):
+    assert copied.get('formula')==calculation.get('formula'),column.attrib['name']
 for unit in ['unit668','unit375','unit925']:
  x=[r for r in rows if r['microID']==unit and r['class_label']=='Water']
  assert len(x)==7
